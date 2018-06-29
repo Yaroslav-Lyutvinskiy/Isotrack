@@ -232,11 +232,13 @@ namespace IsoTrack
         }
 
         public static void SaveToFile(List<Target> Targets, string FileName){
-            StreamWriter sw = new StreamWriter(FileName);
-            sw.WriteLine("NAME\tDESC\tMZ\tRTMIN\tRT\tRTMAX\tCHARGE\tC13TOCHECK\tN15TOCHECK\t");
+            StreamWriter sw = new StreamWriter(FileName,true);
+            sw.WriteLine("NAME\tADDUCT\tDESC\tMZ\tRTMIN\tRTMAX\tMODE\tC13TOCHECK\tN15TOCHECK\t");
             foreach(Target T in Targets){
-                sw.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\t",
-                    T.Name,T.Desc,T.MZ,T.RTMin,T.RT,T.RTMax,T.Charge,T.C13toCheck,T.N15toCheck);
+                sw.WriteLine("{0}\t \t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
+                    T.Name,T.Desc,T.MZ,T.RTMin,T.RTMax,T.Mode>0?"+":"-",T.C13toCheck,T.N15toCheck);
+                String str = String.Format("{0}\t \t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
+                    T.Name,T.Desc,T.MZ,T.RTMin,T.RTMax,T.Mode>0?"+":"-",T.C13toCheck,T.N15toCheck);
             }
             sw.Close();
         }

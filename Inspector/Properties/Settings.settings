@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="Metaflow_Reports_se_cmm_ad_charon_WebServiceSample" Type="(Web Service URL)" Scope="Application">
-      <Value Profile="(Default)">http://charon.ad.cmm.se:6060/DevRawFileAccess/Service.asmx</Value>
+      <Value Profile="(Default)">http://localhost:3980/Service.asmx</Value>
     </Setting>
     <Setting Name="CacheMode" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>

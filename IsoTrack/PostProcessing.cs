@@ -299,6 +299,7 @@ namespace IsoTrack
                 }
             }
             tr.Commit();
+
             Program.MainForm.Log("Targets definition has been finished...");
         }
 

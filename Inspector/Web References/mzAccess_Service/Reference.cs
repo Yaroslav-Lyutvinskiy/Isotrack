@@ -23,7 +23,7 @@ namespace Inspector.mzAccess_Service {
     
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Web.Services.WebServiceBindingAttribute(Name="MSDataServiceSoap", Namespace="http://mzaccess.org/DataService")]
@@ -43,6 +43,8 @@ namespace Inspector.mzAccess_Service {
         
         private System.Threading.SendOrPostCallback GetAreaOperationCompleted;
         
+        private System.Threading.SendOrPostCallback GetTotalOperationCompleted;
+        
         private System.Threading.SendOrPostCallback GetFragmentationEventsOperationCompleted;
         
         private System.Threading.SendOrPostCallback GetMZRangeOperationCompleted;
@@ -56,6 +58,8 @@ namespace Inspector.mzAccess_Service {
         private System.Threading.SendOrPostCallback GetSpectrumArrayOperationCompleted;
         
         private System.Threading.SendOrPostCallback GetAreaArrayOperationCompleted;
+        
+        private System.Threading.SendOrPostCallback GetTotalArrayOperationCompleted;
         
         private System.Threading.SendOrPostCallback ServiceRescanOperationCompleted;
         
@@ -119,6 +123,9 @@ namespace Inspector.mzAccess_Service {
         public event GetAreaCompletedEventHandler GetAreaCompleted;
         
         /// <remarks/>
+        public event GetTotalCompletedEventHandler GetTotalCompleted;
+        
+        /// <remarks/>
         public event GetFragmentationEventsCompletedEventHandler GetFragmentationEventsCompleted;
         
         /// <remarks/>
@@ -138,6 +145,9 @@ namespace Inspector.mzAccess_Service {
         
         /// <remarks/>
         public event GetAreaArrayCompletedEventHandler GetAreaArrayCompleted;
+        
+        /// <remarks/>
+        public event GetTotalArrayCompletedEventHandler GetTotalArrayCompleted;
         
         /// <remarks/>
         public event ServiceRescanCompletedEventHandler ServiceRescanCompleted;
@@ -413,6 +423,46 @@ namespace Inspector.mzAccess_Service {
         }
         
         /// <remarks/>
+        [System.Web.Services.Protocols.SoapDocumentMethodAttribute("http://mzaccess.org/DataService/GetTotal", RequestNamespace="http://mzaccess.org/DataService", ResponseNamespace="http://mzaccess.org/DataService", Use=System.Web.Services.Description.SoapBindingUse.Literal, ParameterStyle=System.Web.Services.Protocols.SoapParameterStyle.Wrapped)]
+        public double GetTotal(string FileName, double MZLow, double MZHigh, double RTLow, double RTHigh, bool Cache, out string ErrorMessage) {
+            object[] results = this.Invoke("GetTotal", new object[] {
+                        FileName,
+                        MZLow,
+                        MZHigh,
+                        RTLow,
+                        RTHigh,
+                        Cache});
+            ErrorMessage = ((string)(results[1]));
+            return ((double)(results[0]));
+        }
+        
+        /// <remarks/>
+        public void GetTotalAsync(string FileName, double MZLow, double MZHigh, double RTLow, double RTHigh, bool Cache) {
+            this.GetTotalAsync(FileName, MZLow, MZHigh, RTLow, RTHigh, Cache, null);
+        }
+        
+        /// <remarks/>
+        public void GetTotalAsync(string FileName, double MZLow, double MZHigh, double RTLow, double RTHigh, bool Cache, object userState) {
+            if ((this.GetTotalOperationCompleted == null)) {
+                this.GetTotalOperationCompleted = new System.Threading.SendOrPostCallback(this.OnGetTotalOperationCompleted);
+            }
+            this.InvokeAsync("GetTotal", new object[] {
+                        FileName,
+                        MZLow,
+                        MZHigh,
+                        RTLow,
+                        RTHigh,
+                        Cache}, this.GetTotalOperationCompleted, userState);
+        }
+        
+        private void OnGetTotalOperationCompleted(object arg) {
+            if ((this.GetTotalCompleted != null)) {
+                System.Web.Services.Protocols.InvokeCompletedEventArgs invokeArgs = ((System.Web.Services.Protocols.InvokeCompletedEventArgs)(arg));
+                this.GetTotalCompleted(this, new GetTotalCompletedEventArgs(invokeArgs.Results, invokeArgs.Error, invokeArgs.Cancelled, invokeArgs.UserState));
+            }
+        }
+        
+        /// <remarks/>
         [System.Web.Services.Protocols.SoapDocumentMethodAttribute("http://mzaccess.org/DataService/GetFragmentationEvents", RequestNamespace="http://mzaccess.org/DataService", ResponseNamespace="http://mzaccess.org/DataService", Use=System.Web.Services.Description.SoapBindingUse.Literal, ParameterStyle=System.Web.Services.Protocols.SoapParameterStyle.Wrapped)]
         public FragmentationInfo[] GetFragmentationEvents(string FileName, double MZLow, double MZHigh, double RTLow, double RTHigh, out string ErrorMessage) {
             object[] results = this.Invoke("GetFragmentationEvents", new object[] {
@@ -673,6 +723,46 @@ namespace Inspector.mzAccess_Service {
         }
         
         /// <remarks/>
+        [System.Web.Services.Protocols.SoapDocumentMethodAttribute("http://mzaccess.org/DataService/GetTotalArray", RequestNamespace="http://mzaccess.org/DataService", ResponseNamespace="http://mzaccess.org/DataService", Use=System.Web.Services.Description.SoapBindingUse.Literal, ParameterStyle=System.Web.Services.Protocols.SoapParameterStyle.Wrapped)]
+        public double[] GetTotalArray(string[] FileNames, double[] MZLow, double[] MZHigh, double[] RTLow, double[] RTHigh, bool Cache, out string ErrorMessage) {
+            object[] results = this.Invoke("GetTotalArray", new object[] {
+                        FileNames,
+                        MZLow,
+                        MZHigh,
+                        RTLow,
+                        RTHigh,
+                        Cache});
+            ErrorMessage = ((string)(results[1]));
+            return ((double[])(results[0]));
+        }
+        
+        /// <remarks/>
+        public void GetTotalArrayAsync(string[] FileNames, double[] MZLow, double[] MZHigh, double[] RTLow, double[] RTHigh, bool Cache) {
+            this.GetTotalArrayAsync(FileNames, MZLow, MZHigh, RTLow, RTHigh, Cache, null);
+        }
+        
+        /// <remarks/>
+        public void GetTotalArrayAsync(string[] FileNames, double[] MZLow, double[] MZHigh, double[] RTLow, double[] RTHigh, bool Cache, object userState) {
+            if ((this.GetTotalArrayOperationCompleted == null)) {
+                this.GetTotalArrayOperationCompleted = new System.Threading.SendOrPostCallback(this.OnGetTotalArrayOperationCompleted);
+            }
+            this.InvokeAsync("GetTotalArray", new object[] {
+                        FileNames,
+                        MZLow,
+                        MZHigh,
+                        RTLow,
+                        RTHigh,
+                        Cache}, this.GetTotalArrayOperationCompleted, userState);
+        }
+        
+        private void OnGetTotalArrayOperationCompleted(object arg) {
+            if ((this.GetTotalArrayCompleted != null)) {
+                System.Web.Services.Protocols.InvokeCompletedEventArgs invokeArgs = ((System.Web.Services.Protocols.InvokeCompletedEventArgs)(arg));
+                this.GetTotalArrayCompleted(this, new GetTotalArrayCompletedEventArgs(invokeArgs.Results, invokeArgs.Error, invokeArgs.Cancelled, invokeArgs.UserState));
+            }
+        }
+        
+        /// <remarks/>
         [System.Web.Services.Protocols.SoapDocumentMethodAttribute("http://mzaccess.org/DataService/ServiceRescan", RequestNamespace="http://mzaccess.org/DataService", ResponseNamespace="http://mzaccess.org/DataService", Use=System.Web.Services.Description.SoapBindingUse.Literal, ParameterStyle=System.Web.Services.Protocols.SoapParameterStyle.Wrapped)]
         public int ServiceRescan() {
             object[] results = this.Invoke("ServiceRescan", new object[0]);
@@ -719,7 +809,7 @@ namespace Inspector.mzAccess_Service {
     }
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Xml", "4.7.2116.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Xml", "4.7.2612.0")]
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
@@ -788,11 +878,11 @@ namespace Inspector.mzAccess_Service {
     }
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     public delegate void GetChromatogramCompletedEventHandler(object sender, GetChromatogramCompletedEventArgs e);
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class GetChromatogramCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
@@ -822,11 +912,11 @@ namespace Inspector.mzAccess_Service {
     }
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     public delegate void GetSpectrumByScanNumberCompletedEventHandler(object sender, GetSpectrumByScanNumberCompletedEventArgs e);
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class GetSpectrumByScanNumberCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
@@ -856,11 +946,11 @@ namespace Inspector.mzAccess_Service {
     }
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     public delegate void GetSpectrumByRTCompletedEventHandler(object sender, GetSpectrumByRTCompletedEventArgs e);
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class GetSpectrumByRTCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
@@ -890,11 +980,11 @@ namespace Inspector.mzAccess_Service {
     }
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     public delegate void GetScanNumberFromRTCompletedEventHandler(object sender, GetScanNumberFromRTCompletedEventArgs e);
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class GetScanNumberFromRTCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
@@ -924,11 +1014,11 @@ namespace Inspector.mzAccess_Service {
     }
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     public delegate void GetRTFromScanNumberCompletedEventHandler(object sender, GetRTFromScanNumberCompletedEventArgs e);
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class GetRTFromScanNumberCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
@@ -958,11 +1048,11 @@ namespace Inspector.mzAccess_Service {
     }
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     public delegate void GetAverageSpectrumCompletedEventHandler(object sender, GetAverageSpectrumCompletedEventArgs e);
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class GetAverageSpectrumCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
@@ -992,11 +1082,11 @@ namespace Inspector.mzAccess_Service {
     }
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     public delegate void GetAreaCompletedEventHandler(object sender, GetAreaCompletedEventArgs e);
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class GetAreaCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
@@ -1026,11 +1116,45 @@ namespace Inspector.mzAccess_Service {
     }
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
+    public delegate void GetTotalCompletedEventHandler(object sender, GetTotalCompletedEventArgs e);
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    public partial class GetTotalCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
+        
+        private object[] results;
+        
+        internal GetTotalCompletedEventArgs(object[] results, System.Exception exception, bool cancelled, object userState) : 
+                base(exception, cancelled, userState) {
+            this.results = results;
+        }
+        
+        /// <remarks/>
+        public double Result {
+            get {
+                this.RaiseExceptionIfNecessary();
+                return ((double)(this.results[0]));
+            }
+        }
+        
+        /// <remarks/>
+        public string ErrorMessage {
+            get {
+                this.RaiseExceptionIfNecessary();
+                return ((string)(this.results[1]));
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     public delegate void GetFragmentationEventsCompletedEventHandler(object sender, GetFragmentationEventsCompletedEventArgs e);
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class GetFragmentationEventsCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
@@ -1060,11 +1184,11 @@ namespace Inspector.mzAccess_Service {
     }
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     public delegate void GetMZRangeCompletedEventHandler(object sender, GetMZRangeCompletedEventArgs e);
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class GetMZRangeCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
@@ -1094,11 +1218,11 @@ namespace Inspector.mzAccess_Service {
     }
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     public delegate void GetRTRangeCompletedEventHandler(object sender, GetRTRangeCompletedEventArgs e);
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class GetRTRangeCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
@@ -1128,11 +1252,11 @@ namespace Inspector.mzAccess_Service {
     }
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     public delegate void FileListCompletedEventHandler(object sender, FileListCompletedEventArgs e);
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class FileListCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
@@ -1162,11 +1286,11 @@ namespace Inspector.mzAccess_Service {
     }
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     public delegate void GetChromatogramArrayCompletedEventHandler(object sender, GetChromatogramArrayCompletedEventArgs e);
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class GetChromatogramArrayCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
@@ -1196,11 +1320,11 @@ namespace Inspector.mzAccess_Service {
     }
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     public delegate void GetSpectrumArrayCompletedEventHandler(object sender, GetSpectrumArrayCompletedEventArgs e);
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class GetSpectrumArrayCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
@@ -1230,11 +1354,11 @@ namespace Inspector.mzAccess_Service {
     }
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     public delegate void GetAreaArrayCompletedEventHandler(object sender, GetAreaArrayCompletedEventArgs e);
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class GetAreaArrayCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
@@ -1264,11 +1388,45 @@ namespace Inspector.mzAccess_Service {
     }
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
+    public delegate void GetTotalArrayCompletedEventHandler(object sender, GetTotalArrayCompletedEventArgs e);
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    public partial class GetTotalArrayCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
+        
+        private object[] results;
+        
+        internal GetTotalArrayCompletedEventArgs(object[] results, System.Exception exception, bool cancelled, object userState) : 
+                base(exception, cancelled, userState) {
+            this.results = results;
+        }
+        
+        /// <remarks/>
+        public double[] Result {
+            get {
+                this.RaiseExceptionIfNecessary();
+                return ((double[])(this.results[0]));
+            }
+        }
+        
+        /// <remarks/>
+        public string ErrorMessage {
+            get {
+                this.RaiseExceptionIfNecessary();
+                return ((string)(this.results[1]));
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     public delegate void ServiceRescanCompletedEventHandler(object sender, ServiceRescanCompletedEventArgs e);
     
     /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2053.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Web.Services", "4.7.2558.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class ServiceRescanCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {

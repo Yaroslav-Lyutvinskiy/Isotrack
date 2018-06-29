@@ -23,7 +23,7 @@ namespace Inspector
         public static mzAccess_Service.MSDataService Service = new mzAccess_Service.MSDataService();
 
         string TargetFileName = "";
-        string ProgramCaption = "IsoTrack Inspector - v.1.6.1 ";
+        string ProgramCaption = "IsoTrack Inspector - v.1.6.2 ";
 
 
         private void Open_db3_Click(object sender, EventArgs e) {
@@ -126,8 +126,16 @@ namespace Inspector
         class TargetNum {
             public string Name;
             public int TargetID;
-            public double RTMin;
-            public double RTMax;
+            private double _RTMin;
+            public double RTMin {
+                set { CachedRTMin = -1.0; CachedRTMax = -1.0; _RTMin = value; }
+                get { return _RTMin; }
+            }
+            private double _RTMax;
+            public double RTMax{
+                set { CachedRTMin = -1.0; CachedRTMax = -1.0; _RTMax = value; }
+                get { return _RTMax; }
+            }
             public double FullRTMin;
             public double FullRTMax;
             public double MZ;
@@ -142,12 +150,25 @@ namespace Inspector
             public DataGridViewRow Row;
             public TargetNum Prev = null;
 
-            public bool GetCache(FilesForm.FileRep Pair, out List<double> Intensities, out List<double> RTTraces) {
-                if (CachedRTMin != FullRTMin || CachedRTMax != FullRTMax) {
-                    //renew cache
+            public double GetCache(FilesForm.FileRep Pair,int Isotope) {
+                if(CachedRTMin != RTMin || CachedRTMax != RTMax) {
+                    Totals.Clear();
+                    CachedRTMin = RTMin;
+                    CachedRTMax = RTMax;
+                }
+                Dictionary<FilesForm.FileRep, double> IsoTotals;
+                Totals.TryGetValue(Isotope, out IsoTotals);
+                double stub;
+                //pairs have been changed
+                if (IsoTotals != null && !IsoTotals.TryGetValue(Pair,out stub)) {
+                    Totals.Clear();
+                    IsoTotals = null;
+                }
+                if(IsoTotals == null) { 
+                    //fill isotope
                     double MZD = (MZ / 1000000.0) * Convert.ToDouble(Properties.Settings.Default.MZDev);
-                    double MinMZ = MZ - MZD;
-                    double MaxMZ = MZ + MZD;
+                    double MinMZ = (MZ+1.003354838*((double)Isotope)) - MZD;
+                    double MaxMZ = (MZ+1.003354838*((double)Isotope)) + MZD;
                     List<FilesForm.FileRep> Pairs =
                         FilesForm.Pairs.Where(
                             a => a.Reported == true &&
@@ -162,44 +183,27 @@ namespace Inspector
                     for(int j = 0 ; j < Pairs.Count ; j++) {
                         FNames[j] = Mode == "+" ? Pairs[j].PosFile : Pairs[j].NegFile; 
                         MinMasses[j] = MinMZ; MaxMasses[j] = MaxMZ;
-                        MinRTs[j] = FullRTMin; MaxRTs[j] = FullRTMax;
+                        MinRTs[j] = RTMin; MaxRTs[j] = RTMax;
                     }
                     string Error;
-                    double[][] Data = Service.GetChromatogramArray(FNames, MinMasses, MaxMasses, MinRTs, MaxRTs, Properties.Settings.Default.CacheMode, out Error);
+                    double[] Data = Service.GetTotalArray(FNames, MinMasses, MaxMasses, MinRTs, MaxRTs, Properties.Settings.Default.CacheMode, out Error);
                     if (!String.IsNullOrEmpty(Error)) {
                         MessageBox.Show("mzAccess error: " + Error, "mzAccess error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        Intensities = null;
-                        RTTraces = null;
-                        return false;
+                        return 0.0;
                     }
-                    this.Intensities = new Dictionary<FilesForm.FileRep, List<double>>();
-                    this.RTTraces = new Dictionary<FilesForm.FileRep, List<double>>();
+                    IsoTotals = new Dictionary<FilesForm.FileRep, double>();
                     for(int i = 0 ; i < Pairs.Count ; i++) {
-                        List<double> Ints = new List<double>();
-                        List<double> RTs = new List<double>();
-                        for(int j = 0 ; j < Data[i].Length ; j += 2) {
-                            Ints.Add(Data[i][j+1]);
-                            RTs.Add(Data[i][j]);
-                        }
-                        if (Data[i].Length == 0) {
-                            Ints.Add(0.0); Ints.Add(0.0);
-                            RTs.Add(FullRTMin); RTs.Add(FullRTMax);
-                        }
-                        this.Intensities.Add(Pairs[i], Ints);
-                        this.RTTraces.Add(Pairs[i], RTs);
+                        IsoTotals.Add(Pairs[i], Data[i]);
                     }
-                    CachedRTMin = FullRTMin;
-                    CachedRTMax = FullRTMax;
+                    Totals.Add(Isotope, IsoTotals);
                 }
-                Intensities = this.Intensities[Pair];
-                RTTraces = this.RTTraces[Pair];
-                return true;
+                return IsoTotals[Pair];
             }
+
             double CachedRTMin = 0.0;
             double CachedRTMax = 0.0;
 
-            Dictionary<FilesForm.FileRep, List<double>> Intensities = null;
-            Dictionary<FilesForm.FileRep, List<double>> RTTraces = null;
+            Dictionary<int, Dictionary<FilesForm.FileRep, double>> Totals = new Dictionary<int, Dictionary<FilesForm.FileRep, double>>();
 
 
             public override string ToString() {
@@ -235,15 +239,8 @@ namespace Inspector
             public double? GetValue(double CorrTh = -1.0) {
                 if(FileName == null)
                     return null;
-                if((LoadedMinRT <= Target.RTMin && LoadedMaxRT >= Target.RTMax) || LoadPoints()) {
-                    double Sum = 0.0;
-                    for(int j = 0 ; j < Intensities.Count ; j++) {
-                        if(RTTraces[j] >= Target.RTMin && RTTraces[j] <= Target.RTMax)
-                            Sum += Intensities[j];
-                    }
-                    return Sum;
-                }
-                return null;
+                Total = LoadTotal();
+                return Total;
             }
 
             List<double> Intensities = null;
@@ -251,10 +248,30 @@ namespace Inspector
 
             private bool LoadPoints() {
                 //by default - loading from target cache
-                //if(Isotope == "C0N0") {
-                //    return Target.GetCache(Pair,out this.Intensities, out this.RTTraces);
-                //} else {
                     return LoadPoints(Target.FullRTMin, Target.FullRTMax, out this.Intensities, out this.RTTraces);
+            }
+
+            double? Total = null;
+
+            public double LoadTotal() {
+                //if(Isotope == "C0N0") {
+                    int CX = Convert.ToInt32(Isotope.Substring(1, Isotope.IndexOf('N') - 1));
+                    return Target.GetCache(Pair,CX);
+                //} else {
+                //    double MZ = Target.MZ + MetaRepForm.IsotopesMassShift(Isotope);
+                //    double MZD = (MZ / 1000000.0) * Convert.ToDouble(Properties.Settings.Default.MZDev);
+                //    double MinMZ = MZ - MZD;
+                //    double MaxMZ = MZ + MZD;
+                //    string Error;
+                //    if(String.IsNullOrWhiteSpace(FileName)) {
+                //        return 0.0;
+                //    }
+                //    double ret = Service.GetTotal(FileName, MinMZ, MaxMZ, Target.RTMin, Target.RTMax, Properties.Settings.Default.CacheMode, out Error);
+                //    if(!String.IsNullOrWhiteSpace(Error)) {
+                //        MessageBox.Show(Error, "WebService Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //        return 0.0;
+                //    }
+                //    return ret;
                 //}
             }
 
@@ -2039,8 +2056,8 @@ namespace Inspector
                 return;
             }
             T.Name = Row.Cells[0].Value.ToString();
-            T.Desc = Row.Cells[1].Value.ToString();
-            T.Adduct = Row.Cells[2].Value.ToString();
+            T.Desc = (Row.Cells[1].Value??"").ToString();
+            T.Adduct = (Row.Cells[2].Value??"").ToString();
             if (int.Parse(Row.Cells[3].Value.ToString()) != 0) {
                 T.C13 = int.Parse(Row.Cells[3].Value.ToString());
             }else {
@@ -2174,7 +2191,7 @@ namespace Inspector
                 ValueView.Rows[e.RowIndex].ReadOnly = false;
                 DataGridViewComboBoxCell ModeCell = new DataGridViewComboBoxCell();
                 ModeCell.Items.AddRange("+", "-");
-                ModeCell.Value = ValueView.Rows[e.RowIndex].Cells[4].ToString();
+                ModeCell.Value = "";
                 ValueView.Rows[e.RowIndex].Cells[4] = ModeCell;
 
                 for(int i = 0 ; i < Fixed ; i++)
@@ -2373,7 +2390,7 @@ namespace Inspector
                 for(int j = 0 ; j < ICounter ; j++) {
                     for(int k = 0 ; k < ValueView.ColumnCount ; k++) {
                         string str = ValueView.Rows[i+j].Cells[k].Value.ToString();
-                        if(str == "" && k > Fixed) {
+                        if(str == "" && k >= Fixed) {
                             str = "0.0";
                         }
                         sw.Write(str);

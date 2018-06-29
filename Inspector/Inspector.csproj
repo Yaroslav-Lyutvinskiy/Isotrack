@@ -190,10 +190,10 @@
     <WebReferences Include="Web References\" />
   </ItemGroup>
   <ItemGroup>
-    <WebReferenceUrl Include="http://charon.ad.cmm.se:6060/DevRawFileAccess/Service.asmx">
+    <WebReferenceUrl Include="http://localhost:3980/Service.asmx%3fWSDL">
       <UrlBehavior>Dynamic</UrlBehavior>
       <RelPath>Web References\mzAccess_Service\</RelPath>
-      <UpdateFromURL>http://charon.ad.cmm.se:6060/DevRawFileAccess/Service.asmx</UpdateFromURL>
+      <UpdateFromURL>http://localhost:3980/Service.asmx%3fWSDL</UpdateFromURL>
       <ServiceLocationURL>
       </ServiceLocationURL>
       <CachedDynamicPropName>
@@ -201,9 +201,6 @@
       <CachedAppSettingsObjectName>Settings</CachedAppSettingsObjectName>
       <CachedSettingsPropName>Metaflow_Reports_se_cmm_ad_charon_WebServiceSample</CachedSettingsPropName>
     </WebReferenceUrl>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Web References\mzAccess_Service\Service.disco" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

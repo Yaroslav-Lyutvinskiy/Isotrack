@@ -143,6 +143,26 @@
           </s:sequence>
         </s:complexType>
       </s:element>
+      <s:element name="GetTotal">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="FileName" type="s:string" />
+            <s:element minOccurs="1" maxOccurs="1" name="MZLow" type="s:double" />
+            <s:element minOccurs="1" maxOccurs="1" name="MZHigh" type="s:double" />
+            <s:element minOccurs="1" maxOccurs="1" name="RTLow" type="s:double" />
+            <s:element minOccurs="1" maxOccurs="1" name="RTHigh" type="s:double" />
+            <s:element minOccurs="1" maxOccurs="1" name="Cache" type="s:boolean" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetTotalResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="GetTotalResult" type="s:double" />
+            <s:element minOccurs="0" maxOccurs="1" name="ErrorMessage" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
       <s:element name="GetFragmentationEvents">
         <s:complexType>
           <s:sequence>
@@ -294,6 +314,26 @@
           </s:sequence>
         </s:complexType>
       </s:element>
+      <s:element name="GetTotalArray">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="FileNames" type="tns:ArrayOfString" />
+            <s:element minOccurs="0" maxOccurs="1" name="MZLow" type="tns:ArrayOfDouble" />
+            <s:element minOccurs="0" maxOccurs="1" name="MZHigh" type="tns:ArrayOfDouble" />
+            <s:element minOccurs="0" maxOccurs="1" name="RTLow" type="tns:ArrayOfDouble" />
+            <s:element minOccurs="0" maxOccurs="1" name="RTHigh" type="tns:ArrayOfDouble" />
+            <s:element minOccurs="1" maxOccurs="1" name="Cache" type="s:boolean" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetTotalArrayResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetTotalArrayResult" type="tns:ArrayOfDouble" />
+            <s:element minOccurs="0" maxOccurs="1" name="ErrorMessage" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
       <s:element name="ServiceRescan">
         <s:complexType />
       </s:element>
@@ -348,6 +388,12 @@
   <wsdl:message name="GetAreaSoapOut">
     <wsdl:part name="parameters" element="tns:GetAreaResponse" />
   </wsdl:message>
+  <wsdl:message name="GetTotalSoapIn">
+    <wsdl:part name="parameters" element="tns:GetTotal" />
+  </wsdl:message>
+  <wsdl:message name="GetTotalSoapOut">
+    <wsdl:part name="parameters" element="tns:GetTotalResponse" />
+  </wsdl:message>
   <wsdl:message name="GetFragmentationEventsSoapIn">
     <wsdl:part name="parameters" element="tns:GetFragmentationEvents" />
   </wsdl:message>
@@ -389,6 +435,12 @@
   </wsdl:message>
   <wsdl:message name="GetAreaArraySoapOut">
     <wsdl:part name="parameters" element="tns:GetAreaArrayResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetTotalArraySoapIn">
+    <wsdl:part name="parameters" element="tns:GetTotalArray" />
+  </wsdl:message>
+  <wsdl:message name="GetTotalArraySoapOut">
+    <wsdl:part name="parameters" element="tns:GetTotalArrayResponse" />
   </wsdl:message>
   <wsdl:message name="ServiceRescanSoapIn">
     <wsdl:part name="parameters" element="tns:ServiceRescan" />
@@ -432,6 +484,11 @@
       <wsdl:input message="tns:GetAreaSoapIn" />
       <wsdl:output message="tns:GetAreaSoapOut" />
     </wsdl:operation>
+    <wsdl:operation name="GetTotal">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Gets total sum of all intensity data for the specified MZ-RT area.</wsdl:documentation>
+      <wsdl:input message="tns:GetTotalSoapIn" />
+      <wsdl:output message="tns:GetTotalSoapOut" />
+    </wsdl:operation>
     <wsdl:operation name="GetFragmentationEvents">
       <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Describe fragmentation events, which occur in requested LC-MS area.</wsdl:documentation>
       <wsdl:input message="tns:GetFragmentationEventsSoapIn" />
@@ -466,6 +523,11 @@
       <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Batch analog of GetArea function.</wsdl:documentation>
       <wsdl:input message="tns:GetAreaArraySoapIn" />
       <wsdl:output message="tns:GetAreaArraySoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetTotalArray">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Batch analog of GetTotal function.</wsdl:documentation>
+      <wsdl:input message="tns:GetTotalArraySoapIn" />
+      <wsdl:output message="tns:GetTotalArraySoapOut" />
     </wsdl:operation>
     <wsdl:operation name="ServiceRescan">
       <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Forces service to rescan directories to actualize list of files accessible with a service</wsdl:documentation>
@@ -538,6 +600,15 @@
         <soap:body use="literal" />
       </wsdl:output>
     </wsdl:operation>
+    <wsdl:operation name="GetTotal">
+      <soap:operation soapAction="http://mzaccess.org/DataService/GetTotal" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
     <wsdl:operation name="GetFragmentationEvents">
       <soap:operation soapAction="http://mzaccess.org/DataService/GetFragmentationEvents" style="document" />
       <wsdl:input>
@@ -594,6 +665,15 @@
     </wsdl:operation>
     <wsdl:operation name="GetAreaArray">
       <soap:operation soapAction="http://mzaccess.org/DataService/GetAreaArray" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetTotalArray">
+      <soap:operation soapAction="http://mzaccess.org/DataService/GetTotalArray" style="document" />
       <wsdl:input>
         <soap:body use="literal" />
       </wsdl:input>
@@ -676,6 +756,15 @@
         <soap12:body use="literal" />
       </wsdl:output>
     </wsdl:operation>
+    <wsdl:operation name="GetTotal">
+      <soap12:operation soapAction="http://mzaccess.org/DataService/GetTotal" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
     <wsdl:operation name="GetFragmentationEvents">
       <soap12:operation soapAction="http://mzaccess.org/DataService/GetFragmentationEvents" style="document" />
       <wsdl:input>
@@ -739,6 +828,15 @@
         <soap12:body use="literal" />
       </wsdl:output>
     </wsdl:operation>
+    <wsdl:operation name="GetTotalArray">
+      <soap12:operation soapAction="http://mzaccess.org/DataService/GetTotalArray" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
     <wsdl:operation name="ServiceRescan">
       <soap12:operation soapAction="http://mzaccess.org/DataService/ServiceRescan" style="document" />
       <wsdl:input>
@@ -752,10 +850,10 @@
   <wsdl:service name="MSDataService">
     <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">&lt;h3&gt;Service provides access to mass spectrometry raw data. &lt;br/&gt; Look for detailed documentation to &lt;a href = "http://mzaccess.org/"&gt;mzAccess.org&lt;/a&gt; &lt;/h3&gt;</wsdl:documentation>
     <wsdl:port name="MSDataServiceSoap" binding="tns:MSDataServiceSoap">
-      <soap:address location="http://charon.ad.cmm.se:6060/DevRawFileAccess/Service.asmx" />
+      <soap:address location="http://localhost:3980/Service.asmx" />
     </wsdl:port>
     <wsdl:port name="MSDataServiceSoap12" binding="tns:MSDataServiceSoap12">
-      <soap12:address location="http://charon.ad.cmm.se:6060/DevRawFileAccess/Service.asmx" />
+      <soap12:address location="http://localhost:3980/Service.asmx" />
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>

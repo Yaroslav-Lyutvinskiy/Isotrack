@@ -503,6 +503,14 @@ namespace IsoTrack
                 }
             }
             if (Properties.Settings.Default.Task != "Targeted Analysis" && Properties.Settings.Default.OutStandards != ""){
+                Targets=Target.ReadTargets(SQLite.con);
+                StreamWriter sw = new StreamWriter(Properties.Settings.Default.OutStandards,true);
+                SQLiteCommand FileList = new SQLiteCommand("Select FileName From Files Order by FileIndex",SQLite.con);
+                SQLiteDataReader Reader = FileList.ExecuteReader();
+                while(Reader.Read()) {
+                    sw.WriteLine(Reader.GetString(0));
+                }
+                sw.Close();
                 Target.SaveToFile(Targets, Properties.Settings.Default.OutStandards);
             }
             if (Properties.Settings.Default.Task == "Targeted Analysis"){

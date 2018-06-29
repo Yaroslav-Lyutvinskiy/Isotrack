@@ -815,7 +815,7 @@
             this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "MetaRepForm";
-            this.Text = "IsoTrack Inspector v.1.6.1";
+            this.Text = "IsoTrack Inspector v.1.6.2";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MetaRepForm_FormClosing);
             this.Load += new System.EventHandler(this.MetaRepForm_Load);
             this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MetaRepForm_KeyPress);
