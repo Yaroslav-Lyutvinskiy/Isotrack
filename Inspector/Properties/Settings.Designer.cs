@@ -26,7 +26,7 @@ namespace Inspector.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.WebServiceUrl)]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://localhost:3980/Service.asmx")]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://charon.ad.cmm.se:6060/DevRawFileAccess/Service.asmx")]
         public string Metaflow_Reports_se_cmm_ad_charon_WebServiceSample {
             get {
                 return ((string)(this["Metaflow_Reports_se_cmm_ad_charon_WebServiceSample"]));

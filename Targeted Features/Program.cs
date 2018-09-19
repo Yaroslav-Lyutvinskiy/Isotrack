@@ -168,9 +168,9 @@ namespace Targeted_Features
                     Feature F = FeatureForTarget(T,P);
                     if (F!=null) ReadyFeatures.Add(F);
                     i++;
-                    if (Targets!=null){
+                    if (Targets!=null){//Targeted analysis 
                         T = i<Targets.Count?Targets[i]:null;
-                    }else{
+                    }else{//Untargeted analysis 
                         //make a features from additional peaks
                         if (F!=null){
                             for (int j = 0; j < F.TPeaks.Peaks.Count; j++){
@@ -283,7 +283,7 @@ namespace Targeted_Features
             MZData Apex = null;
             int MainTraceC13 = 0;
             int MainTraceN15 = 0;
-            if (P==null){
+            if (P==null){//Targeted analysis 
                 if(!ArbTrace){
                     Apex = RawFileService.SearchForApex(T.MZ, T.RT, T.RTMin, T.RTMax);
                 }else{
@@ -303,12 +303,12 @@ namespace Targeted_Features
                     }
                     //if (MainTraceC13 > 0) Console.WriteLine("");
                 }
-            }else{
+            }else{//Untargeted analysis 
                 Apex = P;
             }
             if (Apex == null) return null;
             if (!Simple){
-                F.MainTrace = LCTrace.CreateTrace(RawFileService.GroupFromPoint(Apex),Apex);
+                F.MainTrace = LCTrace.CreateTrace(RawFileService.GroupFromPoint(Apex),Apex);//main for untargeted analysis 
             }else{
                 if(Program.BackSP) {
                     F.MainTrace = LCTrace.CreateTrace(RawFileService.GroupFromArea(T.FullRTMin, T.FullRTMax, Apex.Mass), null);
