@@ -195,7 +195,14 @@ namespace Inspector
                     for(int i = 0 ; i < Pairs.Count ; i++) {
                         IsoTotals.Add(Pairs[i], Data[i]);
                     }
-                    Totals.Add(Isotope, IsoTotals);
+                    //that is a patch for situation observed only on Nina's computer
+                    //for some reason sometime it can't extract value by key (see Totals.TryGetValue(Isotope, out IsoTotals); 40 strings above)
+                    //but then blocks adding that key again 19-09-2018 (????!!! - multithreading issues???)
+                    if(Totals.ContainsKey(Isotope)) {
+                        Totals[Isotope] = IsoTotals;
+                    }else {
+                        Totals.Add(Isotope, IsoTotals);
+                    }
                 }
                 return IsoTotals[Pair];
             }
