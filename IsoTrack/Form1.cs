@@ -9,7 +9,6 @@ using System.IO;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using System.Data.SQLite;
-using MySql.Data.MySqlClient;
 
 namespace IsoTrack
 {
