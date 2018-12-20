@@ -61,42 +61,6 @@ namespace IsoTrack.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2")]
-        public int N15_to_Check {
-            get {
-                return ((int)(this["N15_to_Check"]));
-            }
-            set {
-                this["N15_to_Check"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Targeted Analysis")]
-        public string Task {
-            get {
-                return ((string)(this["Task"]));
-            }
-            set {
-                this["Task"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool Profile {
-            get {
-                return ((bool)(this["Profile"]));
-            }
-            set {
-                this["Profile"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0.1")]
         public double MinRTWidth {
             get {
@@ -104,18 +68,6 @@ namespace IsoTrack.Properties {
             }
             set {
                 this["MinRTWidth"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool C13Only {
-            get {
-                return ((bool)(this["C13Only"]));
-            }
-            set {
-                this["C13Only"] = value;
             }
         }
         
@@ -145,37 +97,13 @@ namespace IsoTrack.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("3")]
-        public double SelectivityThreshold {
-            get {
-                return ((double)(this["SelectivityThreshold"]));
-            }
-            set {
-                this["SelectivityThreshold"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0.1")]
-        public double PeakMinWidth {
-            get {
-                return ((double)(this["PeakMinWidth"]));
-            }
-            set {
-                this["PeakMinWidth"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("2")]
-        public double PeakMaxWidth {
+        public double MaxRTWidth {
             get {
-                return ((double)(this["PeakMaxWidth"]));
+                return ((double)(this["MaxRTWidth"]));
             }
             set {
-                this["PeakMaxWidth"] = value;
+                this["MaxRTWidth"] = value;
             }
         }
         
@@ -205,18 +133,6 @@ namespace IsoTrack.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("server=charon.cmm.ki.se;password=lab;user id=lab;database=Metabolism")]
-        public string MySQLConnString {
-            get {
-                return ((string)(this["MySQLConnString"]));
-            }
-            set {
-                this["MySQLConnString"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string Out_dbfile {
             get {
@@ -224,54 +140,6 @@ namespace IsoTrack.Properties {
             }
             set {
                 this["Out_dbfile"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool WriteTexts {
-            get {
-                return ((bool)(this["WriteTexts"]));
-            }
-            set {
-                this["WriteTexts"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string OutStandards {
-            get {
-                return ((string)(this["OutStandards"]));
-            }
-            set {
-                this["OutStandards"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string StandardsReport {
-            get {
-                return ((string)(this["StandardsReport"]));
-            }
-            set {
-                this["StandardsReport"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string TargetList {
-            get {
-                return ((string)(this["TargetList"]));
-            }
-            set {
-                this["TargetList"] = value;
             }
         }
         
@@ -289,30 +157,6 @@ namespace IsoTrack.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string Standards_List {
-            get {
-                return ((string)(this["Standards_List"]));
-            }
-            set {
-                this["Standards_List"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool IgnoreRT {
-            get {
-                return ((bool)(this["IgnoreRT"]));
-            }
-            set {
-                this["IgnoreRT"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
         public int Processes {
             get {
@@ -320,54 +164,6 @@ namespace IsoTrack.Properties {
             }
             set {
                 this["Processes"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool PeaksOnly {
-            get {
-                return ((bool)(this["PeaksOnly"]));
-            }
-            set {
-                this["PeaksOnly"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("H+; H-;")]
-        public string Adducts {
-            get {
-                return ((string)(this["Adducts"]));
-            }
-            set {
-                this["Adducts"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ArbMainTrace {
-            get {
-                return ((bool)(this["ArbMainTrace"]));
-            }
-            set {
-                this["ArbMainTrace"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool Low_signals {
-            get {
-                return ((bool)(this["Low_signals"]));
-            }
-            set {
-                this["Low_signals"] = value;
             }
         }
         
@@ -385,25 +181,13 @@ namespace IsoTrack.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool BackFilling {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string OutTargets {
             get {
-                return ((bool)(this["BackFilling"]));
+                return ((string)(this["OutTargets"]));
             }
             set {
-                this["BackFilling"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool SaveProfile {
-            get {
-                return ((bool)(this["SaveProfile"]));
-            }
-            set {
-                this["SaveProfile"] = value;
+                this["OutTargets"] = value;
             }
         }
     }

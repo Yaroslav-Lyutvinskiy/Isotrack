@@ -42,7 +42,6 @@
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.panel1 = new System.Windows.Forms.Panel();
             this.ImporButton = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
             this.MainButton = new System.Windows.Forms.Button();
             this.StopButton = new System.Windows.Forms.Button();
             this.OpenStandsFileDialog = new System.Windows.Forms.OpenFileDialog();
@@ -74,7 +73,7 @@
             this.propertyGrid1.Location = new System.Drawing.Point(0, 0);
             this.propertyGrid1.Margin = new System.Windows.Forms.Padding(2);
             this.propertyGrid1.Name = "propertyGrid1";
-            this.propertyGrid1.Size = new System.Drawing.Size(258, 480);
+            this.propertyGrid1.Size = new System.Drawing.Size(260, 480);
             this.propertyGrid1.TabIndex = 0;
             this.propertyGrid1.ToolbarVisible = false;
             this.propertyGrid1.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.propertyGrid1_PropertyValueChanged);
@@ -199,19 +198,18 @@
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.Controls.Add(this.ImporButton);
-            this.panel1.Controls.Add(this.button2);
             this.panel1.Controls.Add(this.MainButton);
             this.panel1.Controls.Add(this.StopButton);
             this.panel1.Location = new System.Drawing.Point(2, 485);
             this.panel1.Margin = new System.Windows.Forms.Padding(2);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(254, 31);
+            this.panel1.Size = new System.Drawing.Size(256, 31);
             this.panel1.TabIndex = 1;
             // 
             // ImporButton
             // 
             this.ImporButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.ImporButton.Location = new System.Drawing.Point(115, 0);
+            this.ImporButton.Location = new System.Drawing.Point(117, 0);
             this.ImporButton.Margin = new System.Windows.Forms.Padding(2);
             this.ImporButton.Name = "ImporButton";
             this.ImporButton.Size = new System.Drawing.Size(58, 31);
@@ -220,22 +218,10 @@
             this.ImporButton.UseVisualStyleBackColor = true;
             this.ImporButton.Click += new System.EventHandler(this.ImportButton_Click);
             // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(83, 0);
-            this.button2.Margin = new System.Windows.Forms.Padding(2);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(34, 31);
-            this.button2.TabIndex = 2;
-            this.button2.Text = "Post";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Visible = false;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
-            // 
             // MainButton
             // 
             this.MainButton.Dock = System.Windows.Forms.DockStyle.Right;
-            this.MainButton.Location = new System.Drawing.Point(178, 0);
+            this.MainButton.Location = new System.Drawing.Point(180, 0);
             this.MainButton.Margin = new System.Windows.Forms.Padding(2);
             this.MainButton.Name = "MainButton";
             this.MainButton.Size = new System.Drawing.Size(76, 31);
@@ -298,7 +284,7 @@
             this.Controls.Add(this.splitContainer1);
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
-            this.Text = "IsoTrack v.1.6.2.0";
+            this.Text = "IsoTrack v.1.7.0.0";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.splitContainer1.Panel1.ResumeLayout(false);
@@ -337,7 +323,6 @@
         public System.Windows.Forms.ListView RawList;
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.ColumnHeader columnHeader5;
-        private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Button ImporButton;
         private System.Windows.Forms.OpenFileDialog DB3ImportFileDialog;
     }

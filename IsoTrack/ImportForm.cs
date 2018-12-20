@@ -31,31 +31,9 @@ namespace IsoTrack
             //Database analysis 
             con = new SQLiteConnection(String.Format("Data Source = {0}",ImportFile));
             con.Open();
-            //SQLiteCommand Attach = new SQLiteCommand(String.Format("ATTACH {0} as Import",ImportFile),con);
-            //Attach.ExecuteNonQuery();
-            //Settings
-            //check adducts
-            SQLiteCommand Check = new SQLiteCommand("Select Value from Settings where Name = \"Adducts\" ", con);
-            SQLiteDataReader Reader = Check.ExecuteReader();
-            Reader.Read();
-            string AddsStr = Reader.GetString(0);
-            string[] Adds = AddsStr.Split(new char[] { ';', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            string MissedAdds = "";
-            foreach(string A in Adds){
-                if (MasterForms.AdductsForm.Adducts.Select(Ad => Ad.Name == A) == null){
-                    MissedAdds+=A+"; ";
-                }
-            }
-            if (MissedAdds != ""){
-                MessageBox.Show("Following adduct(s) has not been found in local adducts file: "+MissedAdds+
-                    "\n Please, add them to Adducts.txt in binary folder of Isotrack","Unknown Adduct(s)");
-                ImportFile = "";
-                Close();
-                return;
-            }
             //Files
             SQLiteCommand Files = new SQLiteCommand("Select FileName From Files Order by FileIndex",con);
-            Reader = Files.ExecuteReader();
+            SQLiteDataReader Reader = Files.ExecuteReader();
             bool NoFiles = true;
             bool AllFiles = true;
             while(Reader.Read()){
@@ -106,15 +84,6 @@ namespace IsoTrack
             }else{
                 checkBox3.Enabled = false;
             }
-            //Targets
-            SQLiteCommand  CTargs = new SQLiteCommand("SELECT * FROM Targets WHERE CustomRTMin is not NULL",con);
-            Reader=CTargs.ExecuteReader();
-            CustomAvail = Reader.Read();
-            if (!CustomAvail){
-                checkBox5.Enabled = false;
-            }else{
-                checkBox5.Checked = true;
-            }
         }
 
         private void button2_Click(object sender, EventArgs e){
@@ -140,13 +109,21 @@ namespace IsoTrack
                 SQLiteDataReader Reader = Settings.ExecuteReader();
                 while(Reader.Read()){
                     string Name = Reader.GetString(0);
-                    if ( Name == "Version" || Name == "FileList" || Name == "OutStandards" || Name == "Out_dbfile" || 
+                    string Task =  Reader.GetString(1);
+                    if ( Name == "Version" || Name == "FileList" || Name == "OutTargets" || Name == "Out_dbfile" || 
                         Name == "TargetList" || Name == "MySQLConnString" || Name == "Standards_List" || Name == "StandardsReport") 
                         continue;
-                    Properties.Settings.Default[Reader.GetString(0)]=
-                        Convert.ChangeType(
-                            Reader.GetString(1),
-                            Properties.Settings.Default[Reader.GetString(0)].GetType());
+                    if (Name == "Task" && !(Task == "Untargeted Analysis")) {
+                        MessageBox.Show(String.Format("Isotrack does not support anymore task like \"{0}\". Therefore, import of settings will be limited", Task),
+                            "No support for " + Task, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    }
+                    try {
+                        Properties.Settings.Default[Reader.GetString(0)] =
+                            Convert.ChangeType(
+                                Reader.GetString(1),
+                                Properties.Settings.Default[Reader.GetString(0)].GetType());
+                    }
+                    catch(Exception) { };
                 }
             }
             //Files
@@ -164,12 +141,6 @@ namespace IsoTrack
             }
             //Pairing (delayed)
             Pairing = checkBox3.Checked;
-            //Targets (delayed)
-            Targets = checkBox4.Checked;
-            CTargets = checkBox5.Checked;
-            if (Targets){
-                Properties.Settings.Default.TargetList = "db3|" + ImportFile;
-            }
             con.Close();
         }
 
@@ -231,16 +202,6 @@ namespace IsoTrack
                 checkBox3.Enabled = PairingAvail;
             }
 
-        }
-
-        bool CustomAvail;
-        private void checkBox4_CheckedChanged(object sender, EventArgs e){
-            if (!checkBox4.Checked){
-                checkBox5.Checked = false;
-                checkBox5.Enabled = false;
-            }else{
-                checkBox5.Enabled = CustomAvail;
-            }
         }
 
     }

@@ -18,19 +18,6 @@ namespace Targeted_Features
         }
 
 
-        public void SaveSetting(string Name, string Value){
-            SQLiteCommand Insert = new SQLiteCommand(
-                "INSERT INTO Settings (Name, Value) "+
-                "Values ( @Name, @Value)",con);
-            SQLiteParameter _Name = new SQLiteParameter("@Name");
-            Insert.Parameters.Add(_Name);
-            SQLiteParameter _Value = new SQLiteParameter("@Value");
-            Insert.Parameters.Add(_Value);
-            _Name.Value = Name;
-            _Value.Value = Value;
-            Insert.ExecuteNonQuery();
-        }
-
         public void SaveFile(string FileName, int ID, int Mode){
             SQLiteCommand Insert = new SQLiteCommand(
                 "INSERT INTO Files (FileName, Mode, FileIndex) "+

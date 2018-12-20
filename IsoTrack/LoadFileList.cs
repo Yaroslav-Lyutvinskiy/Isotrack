@@ -24,36 +24,6 @@ namespace IsoTrack.MasterForms
             Close();
         }
 
-        public bool NextOrPrev = true;
-
-        private void button4_Click(object sender, EventArgs e)
-        {
-            if (!Validate()) return;
-            DialogResult = DialogResult.OK;
-            NextOrPrev = false;
-            Close();
-        }
-
-        private void button3_Click(object sender, EventArgs e)
-        {
-            if (!Validate()) return;
-            DialogResult = DialogResult.OK;
-            NextOrPrev = true;
-            Close();
-        }
-
-        public void FromMaster(){
-            button2.Enabled = false;
-            button2.Visible = false;
-        }
-
-        public void FromGrid(){
-            button3.Enabled = false;
-            button3.Visible = false;
-            button4.Enabled = false;
-            button4.Visible = false;
-        }
-
         private void button6_Click(object sender, EventArgs e)
         {
             try{

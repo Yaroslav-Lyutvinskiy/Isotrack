@@ -90,6 +90,7 @@ namespace IsoTrack
                 "  [TracePeak] INT, "+
                 "  [Left] DOUBLE, "+
                 "  [Right] DOUBLE, "+
+                "  [SNRatio] DOUBLE, "+
                 "  [ApexIntensity] DOUBLE, "+
                 "  [Apex] DOUBLE);",con);
             com.ExecuteNonQuery();
@@ -113,56 +114,6 @@ namespace IsoTrack
                 "  [MSOnly] INT, "+
                 "  [TimeCoef] DOUBLE);",con);
             com.ExecuteNonQuery();
-
-            //Old structure 
-            //com = new SQLiteCommand(
-            //    "CREATE TABLE [Targets] ("+ //?? StandardID
-            //    "  [TargetID] INT, "+
-            //    "  [Name] VARCHAR(50), "+  //??
-            //    "  [Desc] VARCHAR(128), "+ //??
-            //    "  [Adduct] VARCHAR(10), "+ 
-            //    "  [Mode] CHAR(1), "+       
-            //    "  [MZ] DOUBLE, "+
-            //    "  [RT] DOUBLE, "+      //??
-            //    "  [RTMin] DOUBLE, "+   //??
-            //    "  [RTMax] DOUBLE, "+   //??
-            //    "  [C13ToCheck] INT, "+ //??
-            //    "  [N15ToCheck] INT, "+ //??
-            //    "  [Strongs] INT, "+
-            //    "  [Candidates] INT, "+
-            //    "  [Ambigous] INT, "+   //on MZ with attention to adducts
-            //    "  [Charge] NUMERIC(3));",con);
-            //com.ExecuteNonQuery();
-
-
-            //com = new SQLiteCommand(
-            //    "CREATE TABLE [Standards] ("+
-            //    "  [StandardID] INT, "+
-            //    "  [Name] VARCHAR(50), "+
-            //    "  [Desc] VARCHAR(128), "+
-            //    "  [RT] DOUBLE, "+
-            //    "  [RTMin] DOUBLE, "+
-            //    "  [RTMax] DOUBLE, "+
-            //    "  [C13ToCheck] INT, "+
-            //    "  [N15ToCheck] INT, "+
-            //    "  [Ambigous] INT); ",con); //on MZ without attention to adducts
-            //com.ExecuteNonQuery();
-
-            //com = new SQLiteCommand(
-            //    "CREATE TABLE [Candidates] ("+
-            //    "  [TargetID] INT, "+ 
-            //    "  [CandID] INT, "+
-            //    "  [Adduct] VARCHAR(10), "+ //??
-            //    "  [Mode] CHAR(1), "+       //??
-            //    "  [FileID] INT, "+
-            //    "  [MZ] DOUBLE, "+
-            //    "  [TraceID] INT, "+
-            //    "  [PeakNumber] INT, "+
-            //    "  [Selected] INT, "+
-            //    "  [Major] INT, "+
-            //    "  [Score] double );",con);//??
-            //com.ExecuteNonQuery();
-
 
             //Reselect Target to top table (with meaning of standards)
             com = new SQLiteCommand(

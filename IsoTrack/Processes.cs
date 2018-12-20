@@ -60,11 +60,7 @@ namespace IsoTrack
                     if ( PDrivers[i].Proc == null ){
                         SetFileStatus(RawFiles.Items[NextAvialable].Text, FileStatus.Processing);
                         //!!RUN PROCESS
-                        if(Properties.Settings.Default.Task == "Raw Data Caching") {
-                            PDrivers[i].StartProcess(null, RawFiles.Items[NextAvialable].Text, NextAvialable);
-                        } else {
-                            PDrivers[i].StartProcess(Properties.Settings.Default.Out_dbfile, RawFiles.Items[NextAvialable].Text, NextAvialable);
-                        }
+                        PDrivers[i].StartProcess(Properties.Settings.Default.Out_dbfile, RawFiles.Items[NextAvialable].Text, NextAvialable);
                         NextAvialable++;
                         break;
                     }

@@ -29,130 +29,6 @@ namespace IsoTrack
         public int IonID = 0;
         public static int IonCounter = 0;
 
-        public List<Target> AdductTargets = null; //only for standards
-
-        //public Feature Feature;
-        //?? string ChemFormulae
-        //??Class result
-        public static List<Target> ReadTargets(string FileName){
-            //tab-separated text file with caption - Order of columns - orbitrary 
-            //captions in small or big letters
-            //Additional columns are ignopred 
-            //Captions Name,MZ,RT,Charge 
-            //Charge by default = 1
-            //Name by default "MZ-xxx,RT-xxx"
-            //empty strings are ignored 
-            //not tab separated strings are ignored
-            int LineCount = 0;
-            //пока табов меньше пяти - это строки заголовка - отматываем их
-            StreamReader sr = new StreamReader(FileName);
-            List<string> Tokens = new List<string>();
-            while( !sr.EndOfStream){
-                string str = sr.ReadLine();
-                LineCount++;
-                Tokens = new List<string>(str.Split(new char[] {'\t'},StringSplitOptions.RemoveEmptyEntries));
-                if (Tokens.Count >= 3 && !Tokens.Contains("")){
-                    break;
-                }
-            }
-
-            if (sr.EndOfStream){
-                Exception e = new Exception("Target text file wrong format. No data found");
-                throw (e);
-            }
-
-            //в верхний регистр и обрезать
-            for ( int i = 0 ; i < Tokens.Count ; i++){
-                Tokens[i] = Tokens[i].ToUpper().Trim();
-            }
-            //на выходе - заголовок таблицы 
-            int[] Indexes = new int[11];
-            Indexes[0] = Tokens.IndexOf("NAME");
-            Indexes[1] = Tokens.IndexOf("MZ");
-            Indexes[2] = Tokens.IndexOf("RT");
-            Indexes[3] = Tokens.IndexOf("CHARGE");
-            Indexes[4] = Tokens.IndexOf("RTMIN");
-            Indexes[5] = Tokens.IndexOf("RTMAX");
-            Indexes[6] = Tokens.IndexOf("C13TOCHECK");
-            Indexes[7] = Tokens.IndexOf("N15TOCHECK");
-            Indexes[8] = Tokens.IndexOf("DESC");
-            Indexes[9] = Tokens.IndexOf("ADDUCT");
-            Indexes[10] = Tokens.IndexOf("MODE");
-            if (Indexes[1] == -1 ){
-                Exception e = new Exception("Target text file insufficient data. No \"MZ\" column");
-                throw (e);
-            }
-
-            List<Target> Targets = new List<Target>();
-            Properties.Settings Settings = Properties.Settings.Default;
-            int TargetCounter = 0;
-            string Duplicates = "";
-            while( !sr.EndOfStream){
-                string str = sr.ReadLine();
-                LineCount++;
-                Tokens = new List<string>(str.Split(new char[] {'\t'},StringSplitOptions.RemoveEmptyEntries));
-                for(int i = 0 ; i < Tokens.Count ; i++)
-                    Tokens[i] = Tokens[i].Trim();
-                if (Tokens.Count < 2){
-                    continue;
-                }
-                try{
-                    Target T = new Target();
-                    T.MZ = Convert.ToDouble(Tokens[Indexes[1]]);
-                    T.RT = (Indexes[2] != -1) ? Convert.ToDouble(Tokens[Indexes[2]]):0.0;
-                    T.Name = (Indexes[0] != -1) ? Tokens[Indexes[0]].Trim() : "MZ - " + Tokens[Indexes[1]] + ";RT - " + Tokens[Indexes[2]];
-                    T.Charge = (Indexes[3] != -1) ? Convert.ToInt32(Tokens[Indexes[3]]):1;
-                    T.RTMin = (Indexes[4] != -1 && Tokens[Indexes[4]].Trim() != "" ) ? Convert.ToDouble(Tokens[Indexes[4]]) : 0.0;
-                    T.RTMax = (Indexes[5] != -1 && Tokens[Indexes[5]].Trim() != "" ) ? Convert.ToDouble(Tokens[Indexes[5]]) : 0.0;
-                    if (T.RTMin != 0.0 && T.RTMax != 0.0) T.RT = (T.RTMin + T.RTMax) / 2;
-                    if (T.RTMin == 0.0) T.RTMin = T.RT - Settings.RTError; 
-                    if (T.RTMax == 0.0) T.RTMax = T.RT + Settings.RTError; 
-                    T.C13toCheck = (Indexes[6] != -1 && Tokens[Indexes[6]].Trim() != "" ) ? Convert.ToInt32(Tokens[Indexes[6]]) : Settings.C13_to_Check;
-                    T.N15toCheck = (Indexes[7] != -1 && Tokens[Indexes[7]].Trim() != "" ) ? Convert.ToInt32(Tokens[Indexes[7]]) : Settings.N15_to_Check;
-                    if (Settings.C13Only) T.N15toCheck = 0;
-                    //if (String.Trim(Tokens[4]))
-                    T.Desc = (Indexes[8] != -1) ? Tokens[Indexes[8]]:"";
-                    T.Adduct = (Indexes[9] != -1) ? Tokens[Indexes[9]] : "";
-                    T.Mode = (Indexes[10] != -1) ? (Tokens[Indexes[10]] == "-"?-1:1) : 0;
-
-                    //TargetID and IonID
-                    T.ID = -1;
-                    foreach(Target RT in Targets){
-                        if (RT.Name == T.Name){
-                            T.ID = RT.ID;
-                            break;
-                        }
-                    }
-                    if (T.ID == -1){
-                        T.ID = TargetCounter;
-                        TargetCounter++;
-                    }
-                    T.IonID = Targets.Count;
-
-                    while (T.Name.IndexOf("\"") != -1)
-                        T.Name = T.Name.Remove(T.Name.IndexOf("\""), 1);
-                    while (T.Desc.IndexOf("\"") != -1)
-                        T.Desc = T.Desc.Remove(T.Desc.IndexOf("\""), 1);
-                    //check for uniqueness of new target
-                    if (Targets.SingleOrDefault(TD => TD.Name == T.Name && TD.Adduct == T.Adduct) != null){
-                        Duplicates+=T.Name + " (" + T.Adduct + ")\n";
-                    }
-                    Targets.Add(T);
-                }catch(IndexOutOfRangeException){
-                    Exception ex = new Exception("Target text file parsing error - Check column consistency.");
-                    throw ex;
-                }catch{
-                    Exception ex = new Exception("Target text file parsing error - Check data format for string "+LineCount.ToString()+".");
-                    throw ex;
-                }
-            }
-            if (Duplicates != ""){
-                    Exception ex = new Exception("Some targets are duplicated in a list:\n"+Duplicates+"Please, remove duplicates.");
-                    throw ex;
-            }
-            return Targets;
-        }
-
         public static List<Target> ReadTargets(SQLiteConnection con, bool Custom = false){
             List<Target> Targets = new List<Target>();
             SQLiteCommand Select = new SQLiteCommand(
@@ -172,7 +48,7 @@ namespace IsoTrack
                 T.RTMax = Reader.GetDouble(6);
                 T.C13toCheck = Reader.GetInt32(7);
                 T.N15toCheck = Reader.GetInt32(8);
-                if (Settings.C13Only) T.N15toCheck = 0;
+                T.N15toCheck = 0;
                 //T.Charge = Reader.GetInt32(9);
                 T.Adduct = Reader[9].ToString();
                 switch (Reader.GetString(10)){
@@ -190,6 +66,7 @@ namespace IsoTrack
             }
             return Targets;
         }
+
 
         public void SaveDB(SQLiteConnection con, bool SaveIons = true){
             //check for ID exsistance
@@ -212,15 +89,6 @@ namespace IsoTrack
                 Insert = new SQLiteCommand(InsertIon,con);
                 Insert.ExecuteNonQuery();
             }
-        }
-
-        public void ChangeDB(SQLiteConnection con){
-            String Query = String.Format("Update Targets Set Name = \"{1}\", MZ = {2}, RT = {3}, "+
-                "Charge = {4}, Desc = \"{5}\", RTMin = {6}, RTMax = {7}, C13ToCheck = {8}, N15ToCheck = {9}) " +
-                "Where TargetID = {0} ",
-                ID, Name, MZ, RT, Charge, Desc, RTMin, RTMax, C13toCheck, N15toCheck);
-            SQLiteCommand Insert = new SQLiteCommand(Query,con);
-            Insert.ExecuteNonQuery();
         }
 
         public void SetPeakToTarget(Peak P, SQLiteConnection con){
@@ -269,7 +137,5 @@ namespace IsoTrack
             IonCounter++;
             return T;
         }
-
-
     }
 }

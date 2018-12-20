@@ -1,41 +1,58 @@
-﻿using System;
+﻿/*******************************************************************************
+  Copyright 2015-2018 Yaroslav Lyutvinskiy <Yaroslav.Lyutvinskiy@ki.se> and 
+  Roland Nilsson <Roland.Nilsson@ki.se>
+ 
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+ 
+ *******************************************************************************/
+ 
+using System;
 using System.Collections.Generic;
-using System.Text;
-using System.IO;
 using MSFileReaderLib;
 using Agilent.MassSpectrometry.DataAnalysis;
 
-//using Quanty.Properties;
-
 namespace RawMSBox{
 
-    public class MZData {
+    /// <summary>
+    /// Representation of single data point in mass spectra.
+    /// </summary>
+    public class MZData { 
         public double Mass;
         public double Intensity;
         public int Scan;
-        public bool Counted = false;
-        public object Group = null;
-        //public int Scan{
-        //    get{
-        //        return RawFile.RawSpectra[SpectraIndex].Scan;
-        //    }
-        //}
-        public double TimeCoeff{
+        public object Group = null; //reference to trace to which data point belong to (actual type LCMSGroup)
+
+        public double TimeCoeff{    //time scale irregularity information located in raw file spectra collection  
             get{
                 return RawFile.TimeCoefs[Scan];
             }
         }
-        public double RT{
+        public double RT{           //actual retention time information located in raw file spectra collection
             get{
                 return RawFile.RawSpectra[Scan].RT;
             }
         }
+        static FileBox RawFile;     //since it guess that there only one raw file open in this process 
+                                    //we can have reference to that file as a static member and save some memory
 
-        static FileBox RawFile;
         public static void SetRawFile(FileBox FB){
             RawFile = FB;
         }
 
+        /// <summary>
+        /// Creates zero intesity fake data point
+        /// That is necessary for chromatograms leading/trailing zeroes and so on
+        /// </summary>
         public static MZData CreateZero(int Scan){
             MZData Res = new MZData();
             Res.Mass = 0.0;
@@ -44,51 +61,84 @@ namespace RawMSBox{
             return Res;
         }
 
+        //Comparer for Binary Search
+        public class byMass: IComparer<MZData>
+        {
+            public int Compare(MZData x, MZData y)
+            {
+                return x.Mass.CompareTo(y.Mass);
+            }
+        }
+
+        static public byMass MassComparer = new byMass();
+
     }
 
-    public class RawData{
-        public MZData[] Data;
-        public double RT;
-        public int Scan;
-        //для MSX спектров
-        public string Filter="";
+    /// <summary>
+    /// Representation of spectra in a raw data file
+    /// </summary>
+    public class RawSpectrum{ 
 
+        public MZData[] Data;   //Array of data points in the spectra sorted by mass
+        public double RT;       //Retention time where spectrum has been taken
+        public int Scan;        //Scan number - identifier of spectra inside of LC-MS run
+
+        MZData forSearch = new MZData();
+
+        /// <summary>
+        /// Primitive function to search first data point with mass less then specified in spectrum
+        /// </summary>
+        /// <param name="Mass">Mass, to be serched from</param>
+        /// <returns>index of data point in Data array, if not found return zero </returns>
         public int FindMassBelow(double Mass){
-            //запас на оптимизацию - двоичный поиск
+            //could be optimized with binary search
             if (Data.GetLength(0) == 0){
                 return -1;
             }
             if (Data[0].Mass > Mass){
                 return -1;
             }
-            for (int i = 1 ; i < Data.GetLength(0) ; i++){
-                if (Data[i].Mass > Mass ) {
-                    return i-1;
-                }
-            }
-            return Data.GetLength(0)-1;
+            forSearch.Mass = Mass;
+            int Index = Array.BinarySearch(Data, forSearch, MZData.MassComparer);
+            if(Index >= 0)  return Index;
+            return (~Index)-1;
         }
 
+        /// <summary>
+        /// Primitive function to search first data point with mass more then specified in spectrum
+        /// </summary>
+        /// <param name="Mass">Mass, to be serched from</param>
+        /// <returns>index of data point in Data array, if not found return zero </returns>
         public int FindMassAbove(double Mass){
-            //запас на оптимизацию - двоичный поиск
+            //could be optimized with binary search
             if (Data.GetLength(0) == 0){
                 return -1;
             }
             if (Data[Data.GetLength(0)-1].Mass < Mass){
                 return -1;
             }
-            for (int i = 0 ; i < Data.GetLength(0) ; i++){
-                if (Data[i].Mass > Mass ) {
-                    return i;
-                }
-            }
-            return 0;
+            forSearch.Mass = Mass;
+            int Index = Array.BinarySearch(Data, forSearch, MZData.MassComparer);
+            if(Index >= 0)  return Index;
+            return ~Index;
         }
 
-        public double MZPlusPPM(double MZ,double ppm){
+        /// <summary>
+        /// Service static function to change mass to certain ppm (part per million) value
+        /// </summary>
+        /// <param name="MZ">Mass to be adjusted</param>
+        /// <param name="ppm">ppm shift value</param>
+        /// <returns>Adjusted mass</returns>
+        public static double MZPlusPPM(double MZ,double ppm){
             return MZ * ((1000000.0 + ppm) / 1000000.0);
         }
 
+        /// <summary>
+        /// Function to search nearest peak in spectra around MZ mass, interval of search is specified in ppm by Error parameter
+        /// </summary>
+        /// <param name="MZ">Mass, to search around of</param>
+        /// <param name="Error">Interval of +/- ppm to be searched in</param>
+        /// <returns>If found returns data point, otherwise returns zero data point</returns>
         public MZData FindNearestPeak(double MZ, double Error){
             double LowerMass = MZPlusPPM(MZ, -Error);
             double UpperMass = MZPlusPPM(MZ, Error); 
@@ -96,11 +146,14 @@ namespace RawMSBox{
             int LowerIndex = FindMassAbove(LowerMass);
             int UpperIndex = FindMassBelow(UpperMass);
 
-            if (LowerIndex > UpperIndex || LowerIndex== -1 ){ //ничего не нашли - ничего и не делаем 
+            if (LowerIndex > UpperIndex || LowerIndex== -1 ){ //if nothing if found - return zero data point
                 return MZData.CreateZero(Scan);
             }
 
-            while (LowerIndex < UpperIndex) { //если больше одного - ищем самый близкий к целевой массе
+            while (LowerIndex < UpperIndex) { //if there are more then one data point - return closest by mass 
+                //Console.WriteLine("Warning: Two peaks at distanse of {0} ppm in scan {1} mass {2}",
+                //    ((Data[LowerIndex].Mass - Data[LowerIndex+1].Mass) * 500000.0) / (Data[LowerIndex].Mass + Data[LowerIndex+1].Mass),
+                //    Scan, Data[LowerIndex].Mass);
                 if (LowerIndex == Data.GetLength(0)-1 || 
                     Math.Abs(MZ - Data[LowerIndex].Mass) < Math.Abs(MZ - Data[LowerIndex + 1].Mass)) {
                     break;
@@ -110,6 +163,12 @@ namespace RawMSBox{
             return Data[LowerIndex];
         }
 
+        /// <summary>
+        /// Function to search bigest peak in spectra around MZ mass, interval of search is specified in ppm by Error parameter
+        /// </summary>
+        /// <param name="MZ">Mass, to search around of</param>
+        /// <param name="Error">Interval of +/- ppm to be searched in</param>
+        /// <returns>If found returns data point, otherwise returns zero data point</returns>
         public MZData FindBiggestPeak(double MZ, double Error){
             double LowerMass = MZPlusPPM(MZ, -Error);
             double UpperMass = MZPlusPPM(MZ, Error); 
@@ -117,14 +176,14 @@ namespace RawMSBox{
             int LowerIndex = FindMassAbove(LowerMass);
             int UpperIndex = FindMassBelow(UpperMass);
 
-            if (LowerIndex > UpperIndex || LowerIndex== -1 ){ //ничего не нашли - ничего и не делаем 
+            if (LowerIndex > UpperIndex || LowerIndex== -1 ){ //if nothing if found - return zero data point
                 return MZData.CreateZero(Scan);
             }
 
             double MaxInt = Data[LowerIndex].Intensity;
             int MaxIndex = LowerIndex;
             LowerIndex++;
-            while (LowerIndex <= UpperIndex) { //если больше одного - ищем самый близкий к целевой массе
+            while (LowerIndex <= UpperIndex) { //if there are more then one data point - return most intensive
                 if (Data[LowerIndex].Intensity > MaxInt ) {
                     MaxInt = Data[LowerIndex].Intensity;
                     MaxIndex = LowerIndex;
@@ -135,40 +194,40 @@ namespace RawMSBox{
         }
     }
     
+    /// <summary>
+    /// LC-MS run representation
+    /// </summary>
     public abstract class FileBox{
-        public RawData[] RawSpectra; 
-        public int Spectra; 
-        public string RawFileName;
+        public RawSpectrum[] RawSpectra;    //Array of spectra in the raw data file, 
+                                            //when filled contains references to ms-only spectra, 
+                                            //references corresponded to ms2 spectra stays null
 
-        public int[] ms2index; //для каждого спектра дает номер скана последнего full-MS спектра
-        //заполнены только сканов соответствующих full-MS спектрам
-        public int[] IndexDir; //указывает на номер скана следующего full-MS спектра
-        public int[] IndexRev; //указывает на номер скана предидущего full-MS спектра
+        public int Spectra;                 //Total number of spectra in the file 
+        public string RawFileName;          //Raw file name 
 
-        public double[] ESICurrents; //значения тока элекстроспрея 
-        public double[] TimeStamps; //промежуток после предыдущего MS-only спектра - в минутах
-        public double[] TimeCoefs;
-        protected double AverageTimeStamp;
+        //Navigation arrays
+        public int[] IndexDir;              //Array to navigate forward in retention time, each element of this array points to the next ms-only spectra in the run 
+        public int[] IndexRev;              //Array to navigate backward in retention time, each element of this array points to the previous ms-only spectra in the run 
+                                            //if I is index of ms+only spectrum in RawSpectrum collection then 
+                                            //IndexDir[I] will be an index of next ms-only spectra in collection
+                                            //IndexRev[I] will be an index of previous ms-only spectra in collection
 
-        public bool RTCorrection;
+        //Arrays to compensate time interval bias between sequential spectra in LC-MS run
+        //Since time interval between MS+only spectra can be unequal due to MSMS events and other instrument related issues
+        //it should be compensated in LC peak area calculation
+        public double[] TimeStamps;         //Time interval in minutes between current and previous ms-only spectra  
+        public double[] TimeCoefs;          //Coefficient to multiply spectra intensity (TimeStamp[i]/Average)
+        protected double AverageTimeStamp;  //Average time interval in minutes between ms-only spectra in LC-MS run 
 
-        protected MZData[] Buf;
-        protected double LowRT;
-        protected double HighRT;
-        protected double TotalRT;
-        public bool StickMode;
-        public bool RawLabel;
-        public int Mode; //+1 - positive, -1 - negative
+        protected double LowRT;             //Lowest loaded RT
+        protected double HighRT;            //Highest loaded RT
+        protected double TotalRT;           //Total RT Interval
+        public int Mode;                    //+1 - positive, -1 - negative
 
-        //поменять на делегата
-        public delegate void Progress(int Perc);
+        public delegate void Progress(int Perc);    //Delegate where to report progress
         public static Progress RepProgress;
 
-        public FileBox(){
-            StickMode = true;
-            RawLabel = true;
-        }
-
+        //function is to be removed    
         public int ScanNumFromRT(double RT){
             for( int i = 0 ; i < RawSpectra.GetLength(0) ; i++){
                 if (RawSpectra[i].RT >= RT) return i; 
@@ -176,15 +235,34 @@ namespace RawMSBox{
             return RawSpectra.Length-1;
         }
 
+
+        /// <summary>
+        /// Get spectra index in RawSpectra collection where rt is not less then requested 
+        /// </summary>
+        /// <param name="RT">Retention time</param>
+        /// <returns>Index of first spectra with rt not less then requested </returns>
+        public int IndexFromRT(double RT){
+            for( int i = 0 ; i < RawSpectra.GetLength(0) ; i++){
+                if (RawSpectra[i].RT >= RT) return i; 
+            }
+            return RawSpectra.Length-1;
+        }
+
+        /// <summary>
+        /// Load to the memory data points for ms-only spectra where RT is in interval between MinRT and MaxRT
+        /// </summary>
+        /// <param name="MinRT">Minimum RT to load</param>
+        /// <param name="MaxRT">Maximum RT to load</param>
         public void LoadInterval(double MinRT, double MaxRT)
         {
             int Index = 0;
-            //по границам плюс один спектр 
+            //Navigate forward in RT until MinRT
             while (RawSpectra[IndexDir[Index]].RT<MinRT){
                 RawSpectra[Index].Data = null;
-                Index = IndexDir[Index];
+                Index = IndexDir[Index]; //go forward 
             }
             int Progress = 0; 
+            //load spectra forward in RT until MaxRT 
             while (RawSpectra[IndexRev[Index]].RT<MaxRT){
                 if(IndexDir[Index] == -1) {
                     break;
@@ -195,179 +273,63 @@ namespace RawMSBox{
                         if (RawSpectra[Index].Data[i] != null) {
                             RawSpectra[Index].Data[i].Scan = Index;
                         }
-                        RawSpectra[Index].Scan = Index;
                     }
                 }
+                //Report progress
                 if ((int)((RawSpectra[IndexRev[Index]].RT/MaxRT)*100) > Progress) {
                     Progress = (int)((RawSpectra[IndexRev[Index]].RT / MaxRT) * 100);
                     RepProgress(Progress);
                 }
-                Index = IndexDir[Index];
+                Index = IndexDir[Index]; //go forward 
             }
-            //while (RawSpectra[Index].RT<TotalRT){
-            //    RawSpectra[Index].Data = null;
-            //    if (IndexDir[Index] == -1) break;
-            //    Index = IndexDir[Index];
-            //}
             LowRT = MinRT;
             HighRT = MaxRT;
         }
 
-        public MZData[] Centroid(MZData[] Data,int Len, bool StickMode /* former "in" */)
-        {
-	        int total = 0, u;
-	        int o = 0, i = 0, count = Len;
-	        double sumIi, sumI, last = 0.0;
-            double du = 0.0;
-	        bool goingdown = false;
-            MZData[] OutData;
-
-            if (StickMode) {
-                //считаем пока не начнутся нули или пока следующий не станет меньше помассе 
-                for ( i = 1 ; i<count ; i++){
-                    if (Data[i].Mass < Data[i-1].Mass || Data[i].Mass == 0){
-                        break;
-                    }
-                }
-                OutData = new MZData[i];
-                count = i;
-                for (i=0; i<count ; i++){
-                    OutData[i] = new MZData();
-                    OutData[i].Intensity = Data[i].Intensity;
-                    OutData[i].Mass = Data[i].Mass;
-                }
-                return OutData;
-            }
-
-
-            //пропуск начальных нулей
-	        while(i < count && Data[i].Intensity == 0.0) ++i;
-
-	        //считает области больше нуля 
-	        while(i < count)
-	        {
-		        while(i < count && Data[i].Intensity != 0.0)
-		        {
-			        if(last > Data[i].Intensity) {
-                        goingdown = true;
-                    }else{
-                        if(goingdown) {
-				            ++total;
-				            goingdown = false;
-    			        }
-                    }
-
-			        last = Data[i].Intensity;
-			        ++i;
-		        }
-
-		        last = 0.0;
-		        goingdown = false;
-
-		        while(i < count && Data[i].Intensity == 0.0) 
-                    i++;
-
-		        total++;
-	        }
-
-	        //запасает память на подсчитанные области 
-	        OutData = new MZData[total];
-            for (i = 0; i < total; i++) OutData[i] = new MZData();
-	        i = 0; o = 0; total = 0; last = 0.0; goingdown = false;
-
-	        while(i < count && Data[i].Intensity == 0.0) i++;
-
-	        while(i < count)
-	        {
-		        sumIi = sumI = 0.0;
-		        o = i -1;
-		        while(i < count && Data[i].Intensity != 0.0){
-
-			        //если пошло на спад
-			        if(last > Data[i].Intensity) {
-                        goingdown = true;
-                    }else{
-                        if(goingdown) {
-				            u = Convert.ToInt32((sumIi / sumI));
-				            OutData[total].Intensity = sumI;
-				            OutData[total].Mass = Data[o+u].Mass;
-				            ++total;
-
-				            sumIi = sumI = 0.0;
-				            o = i -1;
-				            goingdown = false;
-    			        }
-                    }
-
-			        sumIi += Data[i].Intensity*(i-o);
-			        sumI += Data[i].Intensity;
-
-			        last = Data[i].Intensity;
-			        i++;
-		        }
-
-		        u = Convert.ToInt32((sumIi / sumI) /*+0.5*/ );
-                du = sumIi / sumI - (double)u;
-		        //интенсивность по интегралу 
-		        OutData[total].Intensity = sumI;
-		        //сентроид - по апексу 
-		        //OutData[total].Mass = Data[o+u].Mass;
-                //центроид по центру
-                OutData[total].Mass = Data[o+u].Mass*(1-du) + Data[o+u+1].Mass*du;
-
-		        last = 0.0;
-		        goingdown = false;
-
-		        while(i < count && Data[i].Intensity == 0.0) i++;
-
-                //if (OutData[total].Intensity > 3.0) 
-                    total++;
-	        }
-            return OutData;
-        }
-        //data format dependent
+        /// <summary>
+        /// Read factual spectrum for scan number 
+        /// </summary>
+        /// <param name="Scan"> Scan to be read </param>
         abstract public void ReadMS(int Scan);
-        abstract public int LoadIndex(string FileName);
-        abstract public double GetTIC(int Scan);
+
+        /// <summary>
+        /// //Read index of ms-only spectra, fills navigation structures
+        /// </summary>
+        /// <param name="FileName"> File name of LC-MS run </param>
+        /// <returns></returns>
+        abstract public int LoadIndex(string FileName); 
+        
     }
 
+    //Thermo .raw specific FileBox implementation
     public class RawFileBox : FileBox{
         
-        public MSFileReader_XRawfile RawFile;
-
-        int[] SimtoAdd;
+        public MSFileReader_XRawfile RawFile; //instance of LC-MS run
 
         public override int LoadIndex(string FileName){
 
             this.RawFileName = FileName;
 
             RawFile = new MSFileReader_XRawfile();
-
             RawFile.Open(FileName);
             RawFile.SetCurrentController(0, 1);
-
             Spectra = 0;
             RawFile.GetNumSpectra(ref Spectra);
 
-            if( Spectra <= 0) 
+            if( Spectra <= 0) //if there are no spectra available
                 return 0;
 
-	        int i, lastfull = 0, total = 0;
-            double TotalEsi = 0.0;
+	        int i, LastFull = 0, Total = 0;
 
-            //fake [0] spectra with no data and fake last spectra with no data 
-	        ms2index = new int[Spectra+2];
+            //there will be fake [0] spectra with no data and fake last spectra with no data 
+            //it is made to make any chromatogram start and end with zero
             IndexDir = new int[Spectra+2];
             IndexRev = new int[Spectra+2];
-            SimtoAdd = new int[Spectra + 2];
-            RawSpectra = new RawData[Spectra+2];
+            RawSpectra = new RawSpectrum[Spectra+2];
             for(int j = 0 ; j <= Spectra+1 ; j++){
-                RawSpectra[j] = new RawData();
+                RawSpectra[j] = new RawSpectrum();
             }
-            Buf = new MZData[1000000];
-            for (int ini = 0; ini < 1000000; ini++ ) Buf[ini] = new MZData();
 
-            ESICurrents = new double[Spectra + 2];
             TimeStamps = new double[Spectra+2];
             TimeCoefs = new double[Spectra+2];
 
@@ -380,85 +342,53 @@ namespace RawMSBox{
             int Progress = 0; 
             for(i = 1; i <= Spectra; i++){
 
-                if ((int)(100.0*((double)i/(double)Spectra)) > Progress) {
+                if ((int)(100.0*((double)i/(double)Spectra)) > Progress) { //report progress 
                     Progress = (int)(100.0*((double)i/(double)Spectra));
-                    if (RepProgress != null){
-                        RepProgress(Progress);
-                    }
+                    RepProgress?.Invoke(Progress);
                 }
 
-		        RawFile.GetFilterForScanNum(i, ref Filter);
+		        RawFile.GetFilterForScanNum(i, ref Filter); //to reveal spectra properties we parse filter string
 
-		        //YL - для спектров ms-only
-                //Заплатка для MSX спектров
 		        if(Filter.Contains(" Full ") &&  Filter.Contains(" ms ")  && Filter.Contains("FTMS") ) { //is a FULL MS
 
-                    PosMode |= Filter.Contains(" + ");
+                    PosMode |= Filter.Contains(" + "); 
                     NegMode |= Filter.Contains(" - ");
 
-			        TimeStamps[i] = RawSpectra[lastfull].RT;
-                    
-                    IndexDir[lastfull] = i;
-			        IndexRev[i] = lastfull;
+   				    RawFile.RTFromScanNum(i, ref RawSpectra[i].RT);
+                    RawSpectra[i].Scan = i;
+                    TimeStamps[i] = RawSpectra[i].RT - RawSpectra[LastFull].RT;
 
-			        lastfull = i;
-			        ms2index[i] = lastfull;
+                    IndexDir[LastFull] = i;
+			        IndexRev[i] = LastFull;
 
-			        ++total;
+			        LastFull = i;
 
-				    RawFile.RTFromScanNum(i, ref RawSpectra[i].RT);
-                    RawSpectra[i].Filter = Filter;
-                    TotalRT = RawSpectra[i].RT;
-
-                    TimeStamps[i] = RawSpectra[i].RT - TimeStamps[i];
-
-                    object Labels = null;
-                    object Values = null;
-                    int ArraySize = 0;
-                    double RT = 0.0; 
-
-                    RawFile.GetStatusLogForScanNum(i, ref RT, ref Labels, ref Values , ref ArraySize);
-
-                    for (int k = 0 ; k < ArraySize ; k++ ){
-                        if ((Labels as Array).GetValue(k).ToString().Contains("Source Current")){
-                            ESICurrents[i] = Convert.ToDouble((Values as Array).GetValue(k).ToString());
-                            TotalEsi+=ESICurrents[i];
-                        }
-                    }
-
-
-		        } else {
-			        ms2index[i] = lastfull;
-                    if (Filter.Contains(" SIM ms ")){
-                        SimtoAdd[lastfull] = i;
-                    }
-		        }
+			        Total++;
+		        } 
 		        Filter = null ;
 	        }
-            IndexDir[lastfull] = Spectra +1;
+            IndexDir[LastFull] = Spectra +1; //boundaries of navigation arrays
             IndexDir[Spectra +1] = -1;
-            IndexRev[Spectra + 1] = lastfull;
+            IndexRev[Spectra + 1] = LastFull;
 
-            TotalRT = RawSpectra[lastfull].RT;
-            AverageTimeStamp = TotalRT/total;
+            TotalRT = RawSpectra[LastFull].RT;
+            AverageTimeStamp = TotalRT/Total;
 
-            //пересчитаем временные коэффициэнты 
+            //time interval bias coefficients 
             for (i = IndexDir[0] ; IndexDir[i] != -1 ; i = IndexDir[i]) {
-
                 TimeCoefs[i] = (TimeStamps[i]+TimeStamps[IndexDir[i]])/(2.0*AverageTimeStamp);
-
-                ESICurrents[i] = ESICurrents[i]/(TotalEsi/(double)total);
             }
             TimeCoefs[i] = 1.0;
-            //Spectra number 0 has to have RT at the same distance as others
-            double FRT = RawSpectra[IndexDir[0]].RT;
-            double SRT = RawSpectra[IndexDir[IndexDir[0]]].RT;
-            RawSpectra[0].RT=Math.Max(0,FRT-(SRT-FRT));
-            FRT = RawSpectra[lastfull].RT;
-            SRT = RawSpectra[IndexRev[lastfull]].RT;
-            //FRT = RawSpectra[IndexRev[lastfull]].RT;
-            //SRT = RawSpectra[IndexRev[IndexRev[lastfull]]].RT;
+            //Fake spectra number 0 has to have reasonable RT 
+            double FRT = RawSpectra[IndexDir[0]].RT;            //First full spectra RT
+            double SRT = RawSpectra[IndexDir[IndexDir[0]]].RT;  //Second full spectra RT
+            RawSpectra[0].RT=Math.Max(0,FRT-(SRT-FRT));         // 0 or make the same distance like between 1-st and 2-nd spectra
+            //Last spectra also has to have reasonable RT 
+            FRT = RawSpectra[LastFull].RT;                      //the same for last spectra
+            SRT = RawSpectra[IndexRev[LastFull]].RT;
             RawSpectra[Spectra + 1].RT = FRT + (FRT - SRT);
+            RawSpectra[Spectra + 1].Scan = RawSpectra[Spectra].Scan + 1; 
+
             RawSpectra[0].Data = new MZData[0];
             RawSpectra[Spectra + 1].Data = new MZData[0];
 
@@ -471,186 +401,43 @@ namespace RawMSBox{
         public override void ReadMS(int Scan){
 	        int ArraySize = 0;
             Object MassList = null, EmptyRef=null;
-            double temp=0.0;
-
             try {
-                if(StickMode && Scan > 0 ){
-                    if (RawLabel){
-                        (RawFile as IXRawfile2).GetLabelData(ref MassList, ref EmptyRef, ref  Scan);
-                        ArraySize = (MassList as Array).GetLength(1); 
-                        RawSpectra[Scan].Data = new MZData[ArraySize];
-                        for (int k = 0 ; k<ArraySize ; k++ ){
-                            RawSpectra[Scan].Data[k] = new MZData();
-                            RawSpectra[Scan].Data[k].Mass = (double)(MassList as Array).GetValue(0, k);
-                            RawSpectra[Scan].Data[k].Intensity = (double)(MassList as Array).GetValue(1, k);
-                        }
-                        if (SimtoAdd[Scan] != 0){
-                            int SimScan = SimtoAdd[Scan];
-                            MassList = null;
-                            EmptyRef = null;
-                            (RawFile as IXRawfile2).GetLabelData(ref MassList, ref EmptyRef, ref  SimScan);
-                            int SimSize = (MassList as Array).GetLength(1);
-                            MZData[] NewData = new MZData[ArraySize + SimSize];
-                            for (int k = 0 ; k<SimSize ; k++ ){
-                                NewData[k] = new MZData();
-                                NewData[k].Mass = (double)(MassList as Array).GetValue(0, k);
-                                NewData[k].Intensity = (double)(MassList as Array).GetValue(1, k);
-                            }
-                            for (int k = 0 ; k<ArraySize ; k++ ){
-                                NewData[k + SimSize] = RawSpectra[Scan].Data[k];
-                            }
-                            RawSpectra[Scan].Data = NewData;
-                        }
-                    }else{
-                        double PeakWidth = 0.0;
-                        object PeakFlags = null;
-                        string Filter = RawSpectra[Scan].Filter;
-                        string MassRange = Filter.Substring(Filter.IndexOf("[")+1,Filter.IndexOf("]")-Filter.IndexOf("[")-1);
-                        (RawFile as IXRawfile3).GetMassListRangeFromScanNum(
-                            ref Scan, null, 0, 0, 0, 1, ref PeakWidth,ref MassList , ref PeakFlags, MassRange, ref ArraySize);
-                        RawSpectra[Scan].Data = new MZData[ArraySize];
-                        for (int k = 0 ; k<ArraySize ; k++ ){
-                            RawSpectra[Scan].Data[k] = new MZData();
-                            RawSpectra[Scan].Data[k].Mass = (double)(MassList as Array).GetValue(0, k);
-                            RawSpectra[Scan].Data[k].Intensity = (double)(MassList as Array).GetValue(1, k);
-                        }
-                        if (SimtoAdd[Scan] != 0){
-                            int SimScan = SimtoAdd[Scan];
-                            Filter = null; 
-                            RawFile.GetFilterForScanNum(SimScan, ref Filter);
-                            MassRange = Filter.Substring(Filter.IndexOf("[")+1,Filter.IndexOf("]")-Filter.IndexOf("[")-1);
-                            PeakWidth = 0.0;
-                            PeakFlags = null;
-                            MassList = null;
-                            EmptyRef = null;
-                            int SimSize = 0;
-                            (RawFile as IXRawfile3).GetMassListRangeFromScanNum(
-                                ref SimScan, null, 0, 0, 0, 1, ref PeakWidth,ref MassList , ref PeakFlags, MassRange, ref SimSize);
-                            MZData[] NewData = new MZData[ArraySize + SimSize];
-                            for (int k = 0 ; k<SimSize ; k++ ){
-                                NewData[k].Mass = (double)(MassList as Array).GetValue(0, k);
-                                NewData[k].Intensity = (double)(MassList as Array).GetValue(1, k);
-                            }
-                            for (int k = 0 ; k<ArraySize ; k++ ){
-                                NewData[k+SimSize].Mass = RawSpectra[Scan].Data[k].Mass;
-                                NewData[k+SimSize].Intensity = RawSpectra[Scan].Data[k].Intensity;
-                            }
-                            RawSpectra[Scan].Data = NewData;
-                        }
+                if(Scan > 0 ){
+                    (RawFile as IXRawfile2).GetLabelData(ref MassList, ref EmptyRef, ref  Scan);
+                    ArraySize = (MassList as Array).GetLength(1); 
+                    RawSpectra[Scan].Data = new MZData[ArraySize];
+                    for (int k = 0 ; k<ArraySize ; k++ ){
+                        RawSpectra[Scan].Data[k] = new MZData();
+                        RawSpectra[Scan].Data[k].Mass = (double)(MassList as Array).GetValue(0, k);
+                        RawSpectra[Scan].Data[k].Intensity = (double)(MassList as Array).GetValue(1, k);
                     }
-                    return;
-                }else{
-	                RawFile.GetMassListFromScanNum(ref Scan, null, 
-		                0, //type
-                        0, //value
-                        0, //peaks
-                        0, //centeroid
-                        ref temp,
-		                ref MassList, 
-                        ref EmptyRef, 
-                        ref ArraySize);
+                } else {
+                    RawSpectra[Scan].Data = new MZData[0];
                 }
             }
             catch{
                 Exception e = new Exception(string.Format("Scan #{0} cannot be loaded, probably RAW file is corrupted!",Scan));
                 throw e;
             }
-			
-            //RawSpectra[Scan].Data = new MZData[ArraySize];
-
-            if (SimtoAdd[Scan] == 0){
-                for ( int j = 0 ; j<ArraySize ; j++){
-                    Buf[j].Mass = (double)(MassList as Array).GetValue(0,j);
-                    Buf[j].Intensity =  (double)(MassList as Array).GetValue(1,j);
-                }
-            }else{
-                int SimSize = 0;
-                Object SimMassList = null, SimEmptyRef=null;
-                temp = 0.0;
-                try{
-	                RawFile.GetMassListFromScanNum(ref Scan, null, 
-		                0, //type
-                        0, //value
-                        0, //peaks
-                        0, //centeroid
-                        ref temp,
-		                ref SimMassList, 
-                        ref SimEmptyRef, 
-                        ref SimSize);
-                    for ( int j = 0 ; j<SimSize ; j++){
-                        Buf[j].Mass = (double)(SimMassList as Array).GetValue(0,j);
-                        Buf[j].Intensity =  (double)(SimMassList as Array).GetValue(1,j);
-                    }
-                    for ( int j = 0 ; j<ArraySize ; j++){
-                        Buf[j+SimSize].Mass = (double)(MassList as Array).GetValue(0,j);
-                        Buf[j+SimSize].Intensity =  (double)(MassList as Array).GetValue(1,j);
-                    }
-                    SimMassList = null;
-                }
-                catch{
-                    Exception e = new Exception(string.Format("Scan #{0} cannot be loaded, probably RAW file is corrupted!",Scan));
-                    throw e;
-                }
-            }
-
-
             MassList = null;
             GC.Collect(2);
-
-            int isCentroided = 0;
-
-            RawFile.IsCentroidScanForScanNum(Scan,ref isCentroided);
-
-            RawSpectra[Scan].Data = Centroid(Buf, ArraySize, isCentroided != 0);
         }
-
-/*        public MZData[] PeakDetect(MZData[] Data ){
-
-            PeakDetecting.PeakDetector pd = new PeakDetecting.PeakDetector();
-            PeakDetecting.peakinside[] Peaks = new PeakDetecting.peakinside[1];
-            pd.PeaksDetecting(ref Data, ref Peaks);
-	        MZData[] OutData = new MZData[Peaks.GetLength(0)];
-            for (int i = 0 ; i < Peaks.GetLength(0) ; i++){
-                OutData[i].Intensity = Peaks[i].Value;
-                OutData[i].Mass = Peaks[i].Center;
-            }
-            return OutData;
-        }*/
-
-        public override double GetTIC(int Scan){
-            int NumPackets=0 , Сhannels = 0 , UniTime = 0 ;
-            double StartTime = 0.0, LowMass = 0.0, HighMass = 0.0, Tic = 0.0, BPMass = 0.0, BPInt = 0.0, Freq = 0.0;
-            RawFile.GetScanHeaderInfoForScanNum(
-                Scan, ref NumPackets, ref StartTime, ref LowMass, ref HighMass, ref Tic, ref BPMass, ref BPInt, ref Сhannels, ref UniTime, ref Freq);
-            return Tic;
-        }
-
-
     }
 
-
+    //Agilent .d specific FileBox implementation
     public class AgilentFileBox : FileBox{
         
         public MassSpecDataReader RawFile; 
         private IMsdrDataReader MSReader;
         private IMsdrPeakFilter PeakFilter;
 
-        bool HasProfileData;
-
         public override int LoadIndex(string FileName){
 
             this.RawFileName = FileName;
 
-
-
             RawFile = new MassSpecDataReader();
             MSReader = RawFile;
-
             MSReader.OpenDataFile(FileName);
-
-            HasProfileData = File.Exists(FileName+Path.DirectorySeparatorChar+"AcqData"+Path.DirectorySeparatorChar+"MSProfile.bin");
-            if (StickMode) HasProfileData = false;
-
             Spectra = (int)(MSReader.MSScanFileInformation.TotalScansPresent);
 
             bool PosMode = false, NegMode = false;
@@ -658,19 +445,16 @@ namespace RawMSBox{
             if( Spectra <= 0) 
                 return 0;
 
-	        int i, lastfull = 0, total = 0;
-            double TotalEsi = 0.0;
+	        int i, LastFull = 0, Total = 0;
 
-	        ms2index = new int[Spectra+2];
+            //there will be fake [0] spectra with no data and fake last spectra with no data 
+            //it is made to make any chromatogram start and end with zero
             IndexDir = new int[Spectra+2];
             IndexRev = new int[Spectra+2]; 
-            RawSpectra = new RawData[Spectra+2];
+            RawSpectra = new RawSpectrum[Spectra+2];
             for(int j = 0 ; j <= Spectra+1 ; j++){
-                RawSpectra[j] = new RawData();
+                RawSpectra[j] = new RawSpectrum();
             }
-            Buf = new MZData[500000];
-            for (i = 0; i < 500000; i++) Buf[i] = new MZData();
-            ESICurrents = new double[Spectra+2];
             TimeStamps = new double[Spectra+2];
             TimeCoefs = new double[Spectra+2];
 
@@ -680,68 +464,52 @@ namespace RawMSBox{
             int Progress = 0; 
             for(i = 1; i <= Spectra; i++){
 
-                if ((int)(100.0*((double)i/(double)Spectra)) > Progress) {
+                if ((int)(100.0*((double)i/(double)Spectra)) > Progress) {//report progress 
                     Progress = (int)(100.0*((double)i/(double)Spectra));
-                    if (RepProgress != null){
-                        RepProgress(Progress);
-                    }
+                    RepProgress?.Invoke(Progress);
                 }
 
                 IMSScanRecord ScanRecord =  MSReader.GetScanRecord(i-1);
 
-		        //YL - для спектров ms-only
-		        if(ScanRecord.MSScanType == MSScanType.Scan && ScanRecord.MSLevel == MSLevel.MS && ScanRecord.CollisionEnergy == 0.0) { //is a FULL MS
+		        if(ScanRecord.MSScanType == MSScanType.Scan && ScanRecord.MSLevel == MSLevel.MS && ScanRecord.CollisionEnergy == 0.0) { //if spectra is a FULL MS
 
                     PosMode |= ScanRecord.IonPolarity == IonPolarity.Positive;
                     NegMode |= ScanRecord.IonPolarity == IonPolarity.Negative;
 
-			        TimeStamps[i] = RawSpectra[lastfull].RT;
-                    
-                    IndexDir[lastfull] = i;
-			        IndexRev[i] = lastfull;
-
-			        lastfull = i;
-			        ms2index[i] = lastfull;
-
-			        ++total;
-
                     RawSpectra[i].RT = ScanRecord.RetentionTime;
+                    TimeStamps[i] = RawSpectra[i].RT - RawSpectra[LastFull].RT;
+                    RawSpectra[i].Scan = i;
 
-                    TotalRT = RawSpectra[i].RT;
+                    IndexDir[LastFull] = i;
+			        IndexRev[i] = LastFull;
 
-                    TimeStamps[i] = RawSpectra[i].RT - TimeStamps[i];
+			        LastFull = i;
 
-		        }  else {
-			        ms2index[i] = lastfull;
-		        }
+			        Total++;
+		        }  
 	        }
-            IndexDir[lastfull] = Spectra +1;
-            IndexDir[Spectra +1] = -1;
-            IndexRev[Spectra + 1] = lastfull;
+            IndexDir[LastFull] = Spectra +1;
+            IndexDir[Spectra + 1] = -1;
+            IndexRev[Spectra + 1] = LastFull;
 
+            TotalRT = RawSpectra[LastFull].RT;
+            AverageTimeStamp = TotalRT/Total;
 
-            //IndexDir[lastfull] = -1;
-            TotalRT = RawSpectra[lastfull].RT;
-            AverageTimeStamp = TotalRT/total;
-
-            //пересчитаем временные коэффициэнты 
+            //time interval bias coefficients 
             for (i = IndexDir[0] ; IndexDir[i] != -1 ; i = IndexDir[i]) {
-
                 TimeCoefs[i] = (TimeStamps[i]+TimeStamps[IndexDir[i]])/(2.0*AverageTimeStamp);
-
-                ESICurrents[i] = ESICurrents[i]/(TotalEsi/(double)total);
             }
             TimeCoefs[i] = 1.0;
 
-            //Spectra number 0 has to have RT at the same distance as others
+            //Fake spectra number 0 has to have reasonable RT 
             double FRT = RawSpectra[IndexDir[0]].RT;
             double SRT = RawSpectra[IndexDir[IndexDir[0]]].RT;
             RawSpectra[0].RT=Math.Max(0,FRT-(SRT-FRT));
-            FRT = RawSpectra[lastfull].RT;
-            SRT = RawSpectra[IndexRev[lastfull]].RT;
-            //FRT = RawSpectra[IndexRev[lastfull]].RT;
-            //SRT = RawSpectra[IndexRev[IndexRev[lastfull]]].RT;
+            //Last spectra also has to have reasonable RT 
+            FRT = RawSpectra[LastFull].RT;
+            SRT = RawSpectra[IndexRev[LastFull]].RT;
             RawSpectra[Spectra + 1].RT = FRT + (FRT - SRT);
+
             RawSpectra[0].Data = new MZData[0];
             RawSpectra[Spectra + 1].Data = new MZData[0];
 
@@ -755,56 +523,24 @@ namespace RawMSBox{
         }
 
         public override void ReadMS(int Scan){
-
-	        int ArraySize = 0;
             IBDASpecData SpecData;
             try {
-                if(!HasProfileData || StickMode){
-                    SpecData = MSReader.GetSpectrum(Scan-1,PeakFilter,PeakFilter,DesiredMSStorageType.Peak);
-                    RawSpectra[Scan].Data = new MZData[SpecData.TotalDataPoints];
-                    for (int k = 0 ; k<SpecData.TotalDataPoints ; k++ ){
-                        RawSpectra[Scan].Data[k] = new MZData();
-                        RawSpectra[Scan].Data[k].Mass = SpecData.XArray[k];
-                        RawSpectra[Scan].Data[k].Intensity = SpecData.YArray[k];
-                    }
-                    return;
-                }else{
-                    SpecData = MSReader.GetSpectrum(Scan-1,null,null,/*PeakFilter,PeakFilter,*/DesiredMSStorageType.Profile);
-                    if (Buf.GetLength(0) < SpecData.TotalDataPoints) { 
-                        Buf = new MZData[SpecData.TotalDataPoints + 100];
-                        for (int i = 0 ; i<SpecData.TotalDataPoints + 100 ; i++)
-                            Buf[i] = new MZData();
-                    }
-                    ArraySize = SpecData.TotalDataPoints;
-                    for ( int j = 0 ; j<ArraySize ; j++){
-                        Buf[j].Mass = SpecData.XArray[j];
-                        Buf[j].Intensity =  SpecData.YArray[j];
-                    }
+                //Agilent spectra are enumerated from 0, Thermo spectra + from 1, so here is a shift 
+                SpecData = MSReader.GetSpectrum(Scan-1,PeakFilter,PeakFilter,DesiredMSStorageType.Peak);
+                RawSpectra[Scan].Data = new MZData[SpecData.TotalDataPoints];
+                for (int k = 0 ; k<SpecData.TotalDataPoints ; k++ ){
+                    RawSpectra[Scan].Data[k] = new MZData();
+                    RawSpectra[Scan].Data[k].Mass = SpecData.XArray[k];
+                    RawSpectra[Scan].Data[k].Intensity = SpecData.YArray[k];
                 }
             }
             catch{
                 Exception e = new Exception(string.Format("Scan #{0} cannot be loaded, probably RAW file is corrupted!",Scan-1));
                 throw e;
             }
-			
-            //RawSpectra[Scan].Data = new MZData[ArraySize];
-
+            SpecData = null;
             GC.Collect(2);
-
-            //if (Settings.Default.Centroids){
-            //    RawSpectra[Scan].Data = PeakDetect(Buf);
-            //}else{
-            //    RawSpectra[Scan].Data = Centroid(Buf, ArraySize);
-            //}
-            RawSpectra[Scan].Data = Centroid(Buf, ArraySize, !HasProfileData);
         }
-
-        public override double GetTIC(int Scan){
-            IMSScanRecord ScanRecord =  MSReader.GetScanRecord(Scan);
-            return ScanRecord.Tic;
-        }
-
-
     }
 
 }

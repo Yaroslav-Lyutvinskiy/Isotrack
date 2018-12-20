@@ -16,19 +16,18 @@ namespace Targeted_Features
 
         public FileBox RawFile;
         public FileService(string FileName){
-            RawMSBox.FileBox.RepProgress = RepProgress;
+            FileBox.RepProgress = RepProgress;
             string Ext = Path.GetExtension(FileName);
             if (Ext == ".raw"){
-                RawFile = new RawMSBox.RawFileBox();
+                RawFile = new RawFileBox();
             }else{
-                RawFile = new RawMSBox.AgilentFileBox();
+                RawFile = new AgilentFileBox();
             }
-            RawFile.StickMode = Program.StickMode;
-            RawFile.RawLabel = Program.RawLabel;
             RawFile.LoadIndex(FileName);
-            RawFile.RTCorrection = true;
+            //RawFile.RTCorrection = true;
             MZData.SetRawFile(RawFile);
             double EndRT=0.0;
+            //pass some last MSMS spectra?
             for(int i = RawFile.RawSpectra.Length-1;i>0;i--){
                 EndRT= RawFile.RawSpectra[i].RT;
                 if (EndRT>0.0)break;
@@ -36,165 +35,77 @@ namespace Targeted_Features
             RawFile.LoadInterval(0.0, EndRT);
         }
 
-        public MZData SearchForApex(double MZ, double RT, double RTStart = 0.0, double RTEnd = 0.0, double MassError = 0.0 ){
-            if (MassError == 0.0){
-                //MassError should not be attribute of programm
-                MassError = Program.MassError;
-            }
-            if (RTStart == 0.0) {
-                RTStart = RT - Program.RTError;
-            }
-            if (RTEnd == 0.0 ){
-                RTEnd = RT + Program.RTError;
-            }
-            int ScanStart = RawFile.ScanNumFromRT(RTStart);
-            int ScanEnd = RawFile.ScanNumFromRT(RTEnd);
-            MZData Apex = null;
-            for(int i = ScanStart ; i<= ScanEnd ; i++){
-                if (RawFile.RawSpectra[i].Data != null){
-                    RawData Spec = RawFile.RawSpectra[i];
-                    MZData D = RawFile.RawSpectra[i].FindBiggestPeak(MZ, MassError);
-                    if (D.Mass != 0.0 && (Apex == null || Apex.Intensity < D.Intensity)){
-                        Apex = D;
+        /// <summary>
+        /// Main Trace building method 
+        /// </summary>
+        /// <param name="Point"></param>
+        /// <param name="MassError"></param>
+        /// <returns></returns>
+
+        static int ConflictCounter = 0;
+
+        private MZData TakeFreePoint(int Scan, double Mass, LCMSGroup Group) {
+            MZData Point = RawFile.RawSpectra[Scan].FindNearestPeak(Mass, Program.MassError);
+            if(Point.Mass != 0.0) {
+                if(Point.Group == null) {
+                    Point.Group = Group;
+                    Group.Points.Add(Point);
+                    return Point;
+                }else {
+                    if(Point.Group != Group) {
+                        //Console.WriteLine("Warning: Group conflict {0}",ConflictCounter++);
+                        ConflictCounter++;
                     }
                 }
             }
-            return Apex;
+            return null;
         }
 
-        public LCMSGroup GroupFromPoint(MZData Point, bool Check = true ,double MassError = 0.0){
+        public LCMSGroup GroupFromPoint(MZData Point) {
 
             if (Point.Group != null) return Point.Group as LCMSGroup;
 
             LCMSGroup Group = new LCMSGroup();
-            if (MassError == 0.0){
-                //MassError should not be attribute of programm
-                MassError = Program.MassError;
-            }
 
-            int Scan = Point.Scan;
-
-            MZData CurrentPoint = Point;
-
-            //MZData RawPoint = RawFile.RawSpectra[Scan].FindNearestPeak(Point.MZ,MassError);
-            Point.Counted = Point.Counted || Check;
             Point.Group = Group;
             Group.Points.Add(Point);
-
-            //!!вынести на уровень выше - К созданию трейса
-            //Trace.StartPoint = Point;
-
-            //backward pass
-            bool Flag = false;
-            double LastMass = 0.0;
+            Queue<MZData> QPoints = new Queue<MZData>();
+            QPoints.Enqueue(Point);
             do {
-                Scan = RawFile.IndexRev[Scan];
-                if (CurrentPoint.Mass > 0.0)
-                    LastMass = CurrentPoint.Mass;
-                //MassError can be adotted to measured normal scan-to-scan jumps 
-                MZData Next = RawFile.RawSpectra[Scan].FindNearestPeak(LastMass,MassError);
-                //if (Next.Counted) {
-                //    for (int i = 0 ; i < Group.Points.Count ; i++){
-                //        Group.Points[i].Group = null;
-                //    }
-                //    return null;
-                //}
-                if(Next.Group != null)
-                    break;
-                Next.Counted = Next.Counted || Check;
-                Next.Group = Group;
-                CurrentPoint = Next;
-                //here can be code to support gaps
-                //here can be code to check abnormal scan-to-scan jumps
-                Group.Points.Insert(0,CurrentPoint);
-                if (CurrentPoint.Intensity == 0){
-                    Flag = true;
-                    int GapScan = Scan;
-                    for (int i = 1 ; i <= Program.ZeroScans ; i++){
-                        GapScan = RawFile.IndexRev[GapScan];
-                        if (GapScan == 0) break;
-                        MZData GapNext = RawFile.RawSpectra[GapScan].FindNearestPeak(LastMass,MassError);
-                        if (GapNext.Intensity > 0.0) {
-                            Flag = false;
-                            break;
-                        }
+                MZData CurrentPoint = QPoints.Dequeue();
+                int ForwardScan = RawFile.IndexDir[CurrentPoint.Scan];
+                int BackwardScan = RawFile.IndexRev[CurrentPoint.Scan];
+                for(int i = 0 ; i < Program.ZeroScans+1 ; i++) {
+                    if (ForwardScan > 0) {
+                        MZData NextPoint = TakeFreePoint(ForwardScan, CurrentPoint.Mass, Group);
+                        if (NextPoint != null) QPoints.Enqueue(NextPoint);
+                        ForwardScan = RawFile.IndexDir[ForwardScan];
+                    }
+                    if (BackwardScan > 0) {
+                        MZData NextPoint = TakeFreePoint(BackwardScan, CurrentPoint.Mass, Group);
+                        if (NextPoint != null) QPoints.Enqueue(NextPoint);
+                        BackwardScan = RawFile.IndexRev[BackwardScan];
                     }
                 }
-            } while (!Flag && Scan > 0); //or can be tested against certain threshold
-            //direct pass
-            CurrentPoint = Point;
-            Scan = Point.Scan;
-            Flag = false;
-            do {
-                Scan = RawFile.IndexDir[Scan];
-                if (CurrentPoint.Mass > 0.0)
-                    LastMass = CurrentPoint.Mass;
-                if (Scan == -1 ){
-                    Group.Points[Group.Points.Count - 1].Intensity = 0.0;
-                    break;
-                }
-                //MassError can be adotted to measured normal scan-to-scan jumps 
-                MZData Next = RawFile.RawSpectra[Scan].FindNearestPeak(LastMass,MassError);
-                //if (Next.Counted) {
-                //    for (int i = 0 ; i < Group.Points.Count ; i++){
-                //        Group.Points[i].Group = null;
-                //    }
-                //    return null;
-                //}
-                if(Next.Group != null)
-                    break;
-                Next.Counted = Next.Counted || Check;
-                Next.Group = Group;
-                CurrentPoint = Next;
-                //here can be code to support gaps
-                //here can be code to check abnormal scan-to-scan jumps
-                Group.Points.Add(CurrentPoint);
-                if (CurrentPoint.Intensity == 0){
-                    Flag = true;
-                    int GapScan = Scan;
-                    for (int i = 1 ; i <= Program.ZeroScans ; i++){
-                        GapScan = RawFile.IndexDir[GapScan];
-                        if (GapScan == -1) break;
-                        MZData GapNext = RawFile.RawSpectra[GapScan].FindNearestPeak(LastMass,MassError);
-                        if (GapNext.Intensity > 0.0) {
-                            Flag = false;
-                            break;
-                        }
-                    }
-                }
+            } while(QPoints.Count > 0);
 
-            } while (!Flag); //or can be tested against certain threshold
-            //Check for conditions here (for example min RT or number of scans interval for a trace)
-            //check gaps for missed points
-            for (int i = 0 ; i < Group.Points.Count ; i++) {
-                if (Group.Points[i].Intensity == 0.0) {
-                    int FirstPoint = (i - Program.ZeroScans > 0) ? i - Program.ZeroScans : 0;
-                    int LastPoint = (i + Program.ZeroScans < Group.Points.Count) ? i + Program.ZeroScans : Group.Points.Count - 1;
-                    double MaxMass = 0.0;
-                    double MinMass = 1000000.0;
-                    for(int j = FirstPoint ; j <= LastPoint ; j++) {
-                        if(Group.Points[j].Mass > MaxMass)
-                            MaxMass = Group.Points[j].Mass;
-                        if (Group.Points[j].Mass < MinMass && Group.Points[j].Mass > 0.0)
-                            MinMass = Group.Points[j].Mass;
-                    }
-                    MZData ForGap = RawFile.RawSpectra[Group.Points[i].Scan].FindNearestPeak(
-                        (MaxMass + MinMass) / 2.0,
-                        ((MaxMass - MinMass) * 500000.0) / MinMass + MassError);
-                    if (ForGap.Intensity > 0.0) {
-                        Group.Points[i] = ForGap;
-                        ForGap.Counted = ForGap.Counted || Check;
-                        ForGap.Group = Group;
-                    }
+            Group.Points.Sort((p1,p2)=>p1.Scan.CompareTo(p2.Scan));
+            //Add zero points
+            Group.Points.Add(MZData.CreateZero(RawFile.IndexDir[Group.Points[Group.Points.Count - 1].Scan]));
+            Group.Points.Add(MZData.CreateZero(RawFile.IndexRev[Group.Points[0].Scan]));
+            for( int i = Group.Points.Count - 3 ; i > 0 ; i--) {
+                int CurrentScan = RawFile.IndexRev[Group.Points[i].Scan];
+                while(CurrentScan > Group.Points[i-1].Scan) {
+                    Group.Points.Add(MZData.CreateZero(CurrentScan));
+                    CurrentScan = RawFile.IndexRev[CurrentScan];
                 }
             }
+            Group.Points.Sort((p1,p2)=>p1.Scan.CompareTo(p2.Scan));
 
-            if (Group.Points[Group.Points.Count - 1].RT - Group.Points[0].RT < Program.MinRTWidth) {
-                for (int i = 0 ; i < Group.Points.Count ; i++){
-                    Group.Points[i].Group = null;
-                }
+            if (Group.Points[Group.Points.Count - 1].RT - Group.Points[0].RT < Program.PeakMinWidth) {
                 return null;
             }
+
             LCMSGroup.Global.Add(Group);
             return Group;
         }
@@ -271,19 +182,6 @@ namespace Targeted_Features
             return (x.Intensity==y.Intensity)?0:(x.Intensity>y.Intensity?-1:1);
         }
 
-        public static int CompMZDatabyMZ(MZData x,MZData y){
-            return (x.Mass==y.Mass)?((x.RT==y.RT)?0:(x.RT<y.RT?-1:1)):(x.Mass<y.Mass?-1:1);
-        }
-
-        public class MZDatabyMZ:IComparer<MZData>{
-            public int Compare(MZData x, MZData y){
-                return (x.Mass==y.Mass)?
-                    (x.RT==y.RT?0:(x.RT>y.RT?1:-1)):
-                    (x.Mass>y.Mass?1:-1);
-            }
-
-        }
-
         public void BuildDataMap(){
             //int EndScan = RawFile.ScanNumFromRT(EndRT);
             for(int i = 0 ; i >= 0 ; i=RawFile.IndexDir[i]){
@@ -294,25 +192,12 @@ namespace Targeted_Features
             DataMap.Sort(CompMZDatabyIntensity);
         }
 
-        public void BuildMZMap(){
-            //int EndScan = RawFile.ScanNumFromRT(EndRT);
-            for(int i = 0 ; i >= 0 ; i=RawFile.IndexDir[i]){
-                for(int j = 0 ; j < RawFile.RawSpectra[i].Data.Length ; j++) { // does not work with agilent
-                    if(RawFile.RawSpectra[i].Data[j].Intensity >= Program.DataThres) {
-                        DataMap.Add(RawFile.RawSpectra[i].Data[j]);
-                    }
-                }
-            }
-            DataMap.Sort(CompMZDatabyMZ);
-        }
-
-
         int LastUsed = -1;
 
         public MZData BiggestUnused(){
             //LastUsed++; //??!!
             for( LastUsed++ ; LastUsed < DataMap.Count ; LastUsed++){
-                if (DataMap[LastUsed].Counted)
+                if (DataMap[LastUsed].Group != null )
                     continue;
                 if (DataMap[LastUsed].Intensity < Program.DataThres && DataMap[LastUsed].Intensity > 0.0)
                     break;
