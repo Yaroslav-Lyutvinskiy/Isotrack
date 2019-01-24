@@ -305,7 +305,7 @@ namespace IsoTrack
                 for(int j = 0 ; j < FileCount ; j++) {
                     Inc+= (Targets[i][j] == null)?"0;":"1;";
                 }
-                Desc.Value = Inc;
+                Desc.Value = "Found in files: "+Inc;
                 MZP.Value = MZ;
                 RTP.Value = RT;
                 RTMinP.Value = RTLeft;

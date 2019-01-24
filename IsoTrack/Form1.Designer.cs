@@ -73,7 +73,7 @@
             this.propertyGrid1.Location = new System.Drawing.Point(0, 0);
             this.propertyGrid1.Margin = new System.Windows.Forms.Padding(2);
             this.propertyGrid1.Name = "propertyGrid1";
-            this.propertyGrid1.Size = new System.Drawing.Size(260, 480);
+            this.propertyGrid1.Size = new System.Drawing.Size(248, 480);
             this.propertyGrid1.TabIndex = 0;
             this.propertyGrid1.ToolbarVisible = false;
             this.propertyGrid1.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.propertyGrid1_PropertyValueChanged);
@@ -203,13 +203,13 @@
             this.panel1.Location = new System.Drawing.Point(2, 485);
             this.panel1.Margin = new System.Windows.Forms.Padding(2);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(256, 31);
+            this.panel1.Size = new System.Drawing.Size(257, 31);
             this.panel1.TabIndex = 1;
             // 
             // ImporButton
             // 
             this.ImporButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.ImporButton.Location = new System.Drawing.Point(117, 0);
+            this.ImporButton.Location = new System.Drawing.Point(118, 0);
             this.ImporButton.Margin = new System.Windows.Forms.Padding(2);
             this.ImporButton.Name = "ImporButton";
             this.ImporButton.Size = new System.Drawing.Size(58, 31);
@@ -221,7 +221,7 @@
             // MainButton
             // 
             this.MainButton.Dock = System.Windows.Forms.DockStyle.Right;
-            this.MainButton.Location = new System.Drawing.Point(180, 0);
+            this.MainButton.Location = new System.Drawing.Point(181, 0);
             this.MainButton.Margin = new System.Windows.Forms.Padding(2);
             this.MainButton.Name = "MainButton";
             this.MainButton.Size = new System.Drawing.Size(76, 31);
@@ -284,7 +284,7 @@
             this.Controls.Add(this.splitContainer1);
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
-            this.Text = "IsoTrack v.1.7.0.0";
+            this.Text = "IsoTrack v.1.7.1.0";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.splitContainer1.Panel1.ResumeLayout(false);

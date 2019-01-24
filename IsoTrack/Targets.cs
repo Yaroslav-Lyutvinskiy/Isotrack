@@ -34,7 +34,6 @@ namespace IsoTrack
         public string Desc;
         public int ID;
         public int C13toCheck;
-        public int N15toCheck;
         public double RTMin;
         public double RTMax;
         //for standards isolation
@@ -50,7 +49,7 @@ namespace IsoTrack
         public static List<Target> ReadTargets(SQLiteConnection con, bool Custom = false){
             List<Target> Targets = new List<Target>();
             SQLiteCommand Select = new SQLiteCommand(
-                "Select Targets.TargetID, Name, Desc, Ions.MZ, RT, RTMin, RTMax, C13ToCheck, N15ToCheck, Adduct, Mode, IonID, CustomRTMin, CustomRTMax "+
+                "Select Targets.TargetID, Name, Desc, Ions.MZ, RT, RTMin, RTMax, C13ToCheck, Adduct, Mode, IonID, CustomRTMin, CustomRTMax "+
                 "Charge From Targets, Ions Where Ions.TargetID = Targets.TargetID",con);
             SQLiteDataReader Reader = Select.ExecuteReader();
             Properties.Settings Settings = Properties.Settings.Default;
@@ -65,19 +64,16 @@ namespace IsoTrack
                 T.RTMin = Reader.GetDouble(5);
                 T.RTMax = Reader.GetDouble(6);
                 T.C13toCheck = Reader.GetInt32(7);
-                T.N15toCheck = Reader.GetInt32(8);
-                T.N15toCheck = 0;
-                //T.Charge = Reader.GetInt32(9);
-                T.Adduct = Reader[9].ToString();
-                switch (Reader.GetString(10)){
+                T.Adduct = Reader[8].ToString();
+                switch (Reader.GetString(9)){
                     case "+": T.Mode = 1; break;
                     case "-": T.Mode = -1; break;
                     default: T.Mode = 0; break;
                 }
-                T.IonID = Reader.GetInt32(11);
-                if (Custom && !Reader.IsDBNull(12)){
-                    T.RTMin = Reader.GetDouble(12);
-                    T.RTMax = Reader.GetDouble(13);
+                T.IonID = Reader.GetInt32(10);
+                if (Custom && !Reader.IsDBNull(11)){
+                    T.RTMin = Reader.GetDouble(11);
+                    T.RTMax = Reader.GetDouble(12);
                     T.RT = (T.RTMin + T.RTMax) / 2.0;
                 }
                 Targets.Add(T);
@@ -93,9 +89,9 @@ namespace IsoTrack
             SQLiteCommand Insert;
             int TAmb = (Ambigous % 2 == 0) ? 1 : 0;
             if (!Reader.Read()){
-            String InsertTarget = String.Format("INSERT INTO Targets (TargetID, Name, RT, Desc, RTMin, RTMax, C13ToCheck, N15ToCheck, Candidates, Ambigous, MZ ) " +
+            String InsertTarget = String.Format("INSERT INTO Targets (TargetID, Name, RT, Desc, RTMin, RTMax, C13ToCheck, Candidates, Ambigous, MZ ) " +
                 "Values ( {0}, \"{1}\", {2} , \"{3}\", {4}, {5} , {6}, {7}, {8}, {9}, {10} )",
-                ID, Name, RT, Desc, RTMin, RTMax, C13toCheck, N15toCheck, Candidates.Count, TAmb, MZ);
+                ID, Name, RT, Desc, RTMin, RTMax, C13toCheck, Candidates.Count, TAmb, MZ);
                 Insert = new SQLiteCommand(InsertTarget,con);
                 Insert.ExecuteNonQuery();
             }
@@ -119,12 +115,10 @@ namespace IsoTrack
 
         public static void SaveToFile(List<Target> Targets, string FileName){
             StreamWriter sw = new StreamWriter(FileName,true);
-            sw.WriteLine("NAME\tADDUCT\tDESC\tMZ\tRTMIN\tRTMAX\tMODE\tC13TOCHECK\tN15TOCHECK\t");
+            sw.WriteLine("NAME\tADDUCT\tDESC\tMZ\tRTMIN\tRTMAX\tMODE\tC13TOCHECK\t");
             foreach(Target T in Targets){
-                sw.WriteLine("{0}\t \t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
-                    T.Name,T.Desc,T.MZ,T.RTMin,T.RTMax,T.Mode>0?"+":"-",T.C13toCheck,T.N15toCheck);
-                String str = String.Format("{0}\t \t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t",
-                    T.Name,T.Desc,T.MZ,T.RTMin,T.RTMax,T.Mode>0?"+":"-",T.C13toCheck,T.N15toCheck);
+                sw.WriteLine("{0}\t \t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t",
+                    T.Name,T.Desc,T.MZ,T.RTMin,T.RTMax,T.Mode>0?"+":"-",T.C13toCheck);
             }
             sw.Close();
         }
@@ -147,7 +141,6 @@ namespace IsoTrack
             T.RTMin = this.RTMin;
             T.RTMax = this.RTMax;
             T.C13toCheck = this.C13toCheck;
-            T.N15toCheck = this.N15toCheck;
             T.Charge = this.Charge;
             T.FileID = this.FileID;
             T.Ambigous = this.Ambigous;

@@ -193,7 +193,7 @@ namespace IsoTrack
                 Settings.GetType(), PD, 
                 new CategoryAttribute( "\t\t\t\tGeneral" ),
                 new DescriptionAttribute("Number of processes created in parallel for data processing"),
-                new DisplayNameAttribute("\t\tProcesses")
+                new DisplayNameAttribute("No. Processes")
                 );
             Desc.OverrideProperty(PDChanged);
         //Inputs
@@ -202,7 +202,7 @@ namespace IsoTrack
             PDChanged = TypeDescriptor.CreateProperty(
                 Settings.GetType(), PD, 
                 new CategoryAttribute( "\t\t\t\tInput" ),
-                new DescriptionAttribute("Form Raw File List for Processing"),
+                new DescriptionAttribute("Form raw file list for processing"),
                 new EditorAttribute(typeof(FileListEditor), typeof(System.Drawing.Design.UITypeEditor)),
                 new BrowsableAttribute(true),
                 new DisplayNameAttribute("\tFile List")
@@ -213,71 +213,58 @@ namespace IsoTrack
             PD = TypeDescriptor.GetProperties(Settings)["Mass_Accuracy"];
             PDChanged = TypeDescriptor.CreateProperty(
                 Settings.GetType(), PD,
-                new CategoryAttribute("\t\t\tLC-MS setup"),
-                new DescriptionAttribute("Mass spectrometer Mass Accuracy in ppm"),
+                new CategoryAttribute("\t\t\t\tTrace Exctraction"),
+                new DescriptionAttribute("Mass spectrometer mass accuracy in ppm"),
                 new BrowsableAttribute(true),
                 new DisplayNameAttribute("\t\t\tMass Accuracy")
                 );
             Desc.OverrideProperty(PDChanged);
-            //RTError
-            PD = TypeDescriptor.GetProperties(Settings)["RTError"];
+            //Intensity Threshold (for Untargeted and Standards)
+            PD = TypeDescriptor.GetProperties(Settings)["IntensityThreshold"];
             PDChanged = TypeDescriptor.CreateProperty(
-                Settings.GetType(), PD,
-                new CategoryAttribute("\t\t\tLC-MS setup"),
-                new DescriptionAttribute("Maximum expected shift in retention time for target metabolites"),
-                new BrowsableAttribute(true),
-                new DisplayNameAttribute("\t\tRTError")
-                );
-            Desc.OverrideProperty(PDChanged);
-            //PeakMaxWidth
-            PD = TypeDescriptor.GetProperties(Settings)["MaxRTWidth"];
-            PDChanged = TypeDescriptor.CreateProperty(
-                Settings.GetType(), PD,
-                new CategoryAttribute("\t\t\tLC-MS setup"),
-                new DescriptionAttribute("Maximum expected metabolite peak width in retention time dimension"),
-                new BrowsableAttribute(true),
-                new DisplayNameAttribute("Max RT Peak Width")
-                );
-            Desc.OverrideProperty(PDChanged);
-            //MinRTWidth
-            PD = TypeDescriptor.GetProperties(Settings)["MinRTWidth"];
-            PDChanged = TypeDescriptor.CreateProperty(
-                Settings.GetType(), PD,
-                new CategoryAttribute("\t\t\tLC-MS setup"),
-                new DescriptionAttribute("Minimum expected metabolite peak width in retention time dimension"),
-                new BrowsableAttribute(true),
-                new DisplayNameAttribute("\tMin RT Peak Width")
+                Settings.GetType(), PD, 
+                new CategoryAttribute( "\t\t\t\tTrace Exctraction" ),
+                new DescriptionAttribute("Minimum intensity to pick up trace from that point"),
+                new DisplayNameAttribute("\t\tIntensity Threshold"), 
+                new BrowsableAttribute(true)
                 );
             Desc.OverrideProperty(PDChanged);
             //Gapped scans maximum
             PD = TypeDescriptor.GetProperties(Settings)["Gap_Scans_Max"];
             PDChanged = TypeDescriptor.CreateProperty(
                 Settings.GetType(), PD,
-                new CategoryAttribute("\t\t\tLC-MS setup"),
+                new CategoryAttribute("\t\t\t\tTrace Exctraction"),
                 new BrowsableAttribute(true),
                 new DescriptionAttribute("Maximum number of consequent zero intensity scans to be included in trace"),
                 new DisplayNameAttribute("\tGap Scan Max")
                 );
             Desc.OverrideProperty(PDChanged);
-
-        //Isotope check
-            //C13_to_Check
-            PD = TypeDescriptor.GetProperties(Settings)["C13_to_Check"];
+            //MinRTWidth
+            PD = TypeDescriptor.GetProperties(Settings)["MinRTWidth"];
             PDChanged = TypeDescriptor.CreateProperty(
                 Settings.GetType(), PD,
-                new CategoryAttribute("\t\tIsotope check"),
-                new DescriptionAttribute("Number of C13 isotopes to check if other value is not described in target list"),
+                new CategoryAttribute("\t\t\t\tTrace Exctraction"),
+                new DescriptionAttribute("Minimum expected metabolite peak width in retention time dimension"),
                 new BrowsableAttribute(true),
-                new DisplayNameAttribute("\tC13 to Check")
+                new DisplayNameAttribute("\tMin RT Peak Width")
                 );
             Desc.OverrideProperty(PDChanged);
-
-        //Wavelet peak detection
+            //PeakMaxWidth
+            PD = TypeDescriptor.GetProperties(Settings)["MaxRTWidth"];
+            PDChanged = TypeDescriptor.CreateProperty(
+                Settings.GetType(), PD,
+                new CategoryAttribute("\t\t\t\tTrace Exctraction"),
+                new DescriptionAttribute("Maximum expected metabolite peak width in retention time dimension"),
+                new BrowsableAttribute(true),
+                new DisplayNameAttribute("Max RT Peak Width")
+                );
+            Desc.OverrideProperty(PDChanged);
+        //LC peak detection
             //MinIntensity
             PD = TypeDescriptor.GetProperties(Settings)["MinIntensity"];
             PDChanged = TypeDescriptor.CreateProperty(
                 Settings.GetType(), PD,
-                new CategoryAttribute("\t\tWavelet peak detection"),
+                new CategoryAttribute("\t\t\tLC peak detection"),
                 new DescriptionAttribute("Minimum apex intensity for peaks"),
                 new BrowsableAttribute(true),
                 new DisplayNameAttribute("Min. Intensity")
@@ -287,34 +274,47 @@ namespace IsoTrack
             PD = TypeDescriptor.GetProperties(Settings)["BaselineRatio"];
             PDChanged = TypeDescriptor.CreateProperty(
                 Settings.GetType(), PD,
-                new CategoryAttribute("\t\tWavelet peak detection"),
+                new CategoryAttribute("\t\t\tLC peak detection"),
                 new DescriptionAttribute("Minimum Signal/Noise ratio for peaks supposed to be detected by wavelet transform"),
                 new BrowsableAttribute(true),
                 new DisplayNameAttribute("S/N Ratio")
                 );
             Desc.OverrideProperty(PDChanged);
 
-        //Task Related Misc.
-            //IntensityThreshold (for Untargeted and Standards)
-            PD = TypeDescriptor.GetProperties(Settings)["IntensityThreshold"];
+        //Isotope check
+            //C13_to_Check
+            PD = TypeDescriptor.GetProperties(Settings)["C13_to_Check"];
             PDChanged = TypeDescriptor.CreateProperty(
-                Settings.GetType(), PD, 
-                new CategoryAttribute( "\tMisc." ),
-                new DescriptionAttribute("Minimum Intensity to pick up trace from that point"),
-                new DisplayNameAttribute("Intensity Threshold"), 
-                new BrowsableAttribute(true)
+                Settings.GetType(), PD,
+                new CategoryAttribute("\t\tDeisotoping"),
+                new DescriptionAttribute("Number of C13 isotopes to check"),
+                new BrowsableAttribute(true),
+                new DisplayNameAttribute("\tNo. C13 to Check")
                 );
             Desc.OverrideProperty(PDChanged);
+
+        //Feature clustering
             //Commons
             PD = TypeDescriptor.GetProperties(Settings)["Commons"];
             PDChanged = TypeDescriptor.CreateProperty(
                 Settings.GetType(), PD, 
-                new CategoryAttribute( "\tMisc." ),
-                new DescriptionAttribute("Minimum number of files where compaund has been detected to be recognized as a potential target"),
+                new CategoryAttribute( "\tFeature clustering" ),
+                new DescriptionAttribute("Minimum number of files where signal has to be detected to be included in feature list"),
                 new DisplayNameAttribute("Common in files"), 
                 new BrowsableAttribute(true)
                 );
             Desc.OverrideProperty(PDChanged);
+            //RTError
+            PD = TypeDescriptor.GetProperties(Settings)["RTError"];
+            PDChanged = TypeDescriptor.CreateProperty(
+                Settings.GetType(), PD,
+                new CategoryAttribute("\tFeature clustering"),
+                new DescriptionAttribute("Maximum expected shift in retention time for signal in different files"),
+                new BrowsableAttribute(true),
+                new DisplayNameAttribute("RTError")
+                );
+            Desc.OverrideProperty(PDChanged);
+
         //Outputs
             //Out_dbfile
             PD = TypeDescriptor.GetProperties(Settings)["Out_dbfile"];
@@ -333,8 +333,8 @@ namespace IsoTrack
             PDChanged = TypeDescriptor.CreateProperty(
                 Settings.GetType(), PD, 
                 new CategoryAttribute( "Outputs" ),
-                new DescriptionAttribute("Where to write resulting target list"),
-                new DisplayNameAttribute("\tTarget List - out"), 
+                new DescriptionAttribute("Name of the text file to write resulting feature list"),
+                new DisplayNameAttribute("\tFeature List"), 
                 new EditorAttribute(typeof(FileEditor), typeof(System.Drawing.Design.UITypeEditor)),
                 new BrowsableAttribute(true)
                 );

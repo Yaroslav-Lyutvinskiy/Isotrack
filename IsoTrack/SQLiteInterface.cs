@@ -53,15 +53,6 @@ namespace IsoTrack
                 "  [Mode] INT, "+
                 "  [FileName] VARCHAR(256));",con);
             com.ExecuteNonQuery();
-            //com = new SQLiteCommand(
-            //    "CREATE TABLE [Points] ("+
-            //    "  [GroupID] INT, "+
-            //    "  [MZ] DOUBLE, "+
-            //    "  [RT] DOUBLE, "+
-            //    "  [Intensity] DOUBLE, "+
-            //    "  [TimeCoeff] DOUBLE, "+
-            //    "  [Scan] INT);",con);
-            //com.ExecuteNonQuery();
             com = new SQLiteCommand(
                 "CREATE TABLE [Settings] ("+
                 "  [Name] VARCHAR(30), "+
